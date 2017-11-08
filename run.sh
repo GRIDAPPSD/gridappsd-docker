@@ -25,12 +25,12 @@ curl -o ieee8500.xml https://raw.githubusercontent.com/GRIDAPPSD/Bootstrap/maste
 curl -D- -H 'Content-Type: application/xml' --upload-file ieee8500.xml -X POST 'http://localhost:8889/bigdata/sparql'
 
 
-echo " "
-echo "Opening web browser to the viz container $viz_url"
-if [ `uname` == "Linux" ]; then
-  xdg-open $viz_url
-elif [ `uname` == "Darwin" ]; then
-  open $viz_url
-else
-  echo "Please open a browser to $viz_url"
-fi
+#echo " "
+#echo "Opening web browser to the viz container $viz_url"
+#if [ `uname` == "Linux" ]; then
+#  xdg-open $viz_url
+#elif [ `uname` == "Darwin" ]; then
+#  open $viz_url
+#else
+#  echo "Please open a browser to $viz_url"
+#fi
