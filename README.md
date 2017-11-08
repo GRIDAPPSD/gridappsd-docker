@@ -2,6 +2,8 @@
 
 # Start Containers
 
+The run.sh script will download the mysql data to be used in container startup, start the docker containers, and download and import the blazegraph data.
+
 ````
 run.sh
 ````
@@ -13,13 +15,5 @@ Browse to http://localhost:8080
 # Close containers
 
 ````
-sudo docker-compose down
+docker-compose down
 ````
-
-# Start individual services
-
-#
-post install to install blazegraph
-import
-
-start a browser session to go to the viz
