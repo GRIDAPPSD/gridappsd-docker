@@ -14,11 +14,14 @@ services:
 
   mysql:
     image: mysql/mysql-server:5.7
-  
+
+    ports:
+      - 3306:3306
+
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
       MYSQL_PORT: 3306
-  
+
     volumes:
       - ./gridappsdmysql:/var/lib/mysql
       - ./dumps/gridappsd_mysql_dump.sql:/docker-entrypoint-initdb.d/schema.sql:ro
@@ -35,15 +38,13 @@ services:
     image: gridappsd/gridappsd
     ports:
       - 61614:61614
-
+      - 61616:61616
+      - 61613:61613
+    volumes:
+      - ./conf:/gridappsd/conf
+      - ./logs:/tmp/gridappsd/logs
     depends_on:
       - mysql
       - blazegraph
 
-    environment:
-      - GRIDAPPSD_PROJECT=/gridappsd
-      - LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRIDAPPSD_PROJECT/lib:/usr/local/lib
-      - FNCS_LOG_LEVEL=DEBUG4
-    #entrypoint: "java -jar /gridappsd/lib/run.bnd.jar"
     entrypoint: "tail -f /dev/null"
-
