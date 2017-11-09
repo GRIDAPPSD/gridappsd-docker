@@ -10,17 +10,10 @@ services:
     volumes:
       # Should match what is in run-example.sh
       - ./gridappsd/blazegraph/data:/data
- #     - /tmp/gridappsd/log:/tmp/gridappsd/log
- #     - ./conf:/gridappsd/conf
       - ./conf/rwstore.properties:/RWStore.properties
-      #- ./blazegraphprops/rwstore.properties:/RWStore.properties
-      - ./bz:/home/gridappsd
 
   mysql:
     image: mysql/mysql-server:5.7
-  
-    #ports:
-    #  - 3306:3306
   
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
@@ -28,12 +21,7 @@ services:
   
     volumes:
       - ./gridappsdmysql:/var/lib/mysql
-      - ./mysqldump/gridappsd_mysql_dump.sql:/docker-entrypoint-initdb.d/schema.sql:ro
-
-      #docker run --name my-container-name
-      # -e MYSQL_ROOT_PASSWORD=/tmp/password.txt
-      # -v mypasswordfile:/tmp/password.txt
-      # -e MYSQL_ONETIME_PASSWORD=yes -d mysql/mysql-server:tag
+      - ./dumps/gridappsd_mysql_dump.sql:/docker-entrypoint-initdb.d/schema.sql:ro
 
   viz:
     image: gridappsd/viz
@@ -53,9 +41,9 @@ services:
       - blazegraph
 
     environment:
-      - GRIDAPPSD_PROJECT="/gridappsd"
-      - LD_LIBRARY_PATH="$$LD_LIBRARY_PATH:$$GRIDAPPSD_PROJECT/lib:/usr/local/lib"
-      - FNCS_LOG_LEVEL="DEBUG4"
+      - GRIDAPPSD_PROJECT=/gridappsd
+      - LD_LIBRARY_PATH=$LD_LIBRARY_PATH:$GRIDAPPSD_PROJECT/lib:/usr/local/lib
+      - FNCS_LOG_LEVEL=DEBUG4
     #entrypoint: "java -jar /gridappsd/lib/run.bnd.jar"
     entrypoint: "tail -f /dev/null"
 
