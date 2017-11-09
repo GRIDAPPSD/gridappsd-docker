@@ -2,13 +2,16 @@
 
 ## Start Containers
 
-The run.sh script will download the mysql data to be used in container startup, start the docker containers, and download and import the blazegraph data.
+The run.sh does the folowing
+ -  download the mysql dump file
+ -  download the blazegraph data
+ -  download the applications
+ -  download the services
+ -  start the docker containers
+ -  ingest the blazegraph data
+ -  open a web browser to the viz container http://localhost:8080
 
     ./run.sh
-
-## Open browser
-
-    Browse to http://localhost:8080
 
 ## Close and remove the containers
 
