@@ -1,6 +1,8 @@
 # gridappsd-docker
 
-## Start Containers
+## Start the docker container services
+
+    ./run.sh
 
 The run.sh does the folowing
  -  download the mysql dump file
@@ -11,7 +13,6 @@ The run.sh does the folowing
  -  ingest the blazegraph data
  -  open a web browser to the viz container http://localhost:8080
 
-    ./run.sh
 
 ## Close and remove the containers
 
