@@ -11,7 +11,7 @@ if [ ! -f "$DATA_DIR/gridappsd_mysql_dump.sql" ]; then
   echo " "
   echo "Downloading mysql data"
   curl -s -o "$DATA_DIR/gridappsd_mysql_dump.sql" "https://raw.githubusercontent.com/GRIDAPPSD/Bootstrap/master/gridappsd_mysql_dump.sql"
-  sed -i -e "s/'gridappsd'@'localhost'/'gridappsd'@'%'/g" $DATA_DIR/gridappsd_mysql_dump.sql
+  sed -i '' -e "s/'gridappsd'@'localhost'/'gridappsd'@'%'/g" $DATA_DIR/gridappsd_mysql_dump.sql
 fi
 
 if [ ! -f "$DATA_DIR/ieee8500.xml" ]; then
