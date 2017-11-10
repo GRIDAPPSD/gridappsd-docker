@@ -40,6 +40,9 @@ services:
       - 61614:61614
       - 61616:61616
       - 61613:61613
+    working_dir: /gridappsd
+    environment:
+      - PATH=/gridappsd/bin:/gridappsd/lib:$PATH
     volumes:
       - ./conf:/gridappsd/conf
       - ./logs:/tmp/gridappsd/logs
