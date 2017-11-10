@@ -45,7 +45,7 @@ services:
       - PATH=/gridappsd/bin:/gridappsd/lib:$PATH
     volumes:
       - ./conf:/gridappsd/conf
-      - ./logs:/tmp/gridappsd/logs
+#      - ./log:/tmp/gridappsd/log
     depends_on:
       - mysql
       - blazegraph
