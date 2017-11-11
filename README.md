@@ -29,9 +29,12 @@ Open your browser to http://localhost:8080/ieee8500
 
 Click the triangle in the top right corner to have a simulation run.
 
-## Close and remove the containers
+## Exiting the container
 
-    docker-compose down
+Use Ctrl+C (Command+C) to stop gridappsd from running.  
+
+  exit
+  docker-compose down
 
 ### Future enhancements    
   -  open a web browser to the viz container http://localhost:8080
