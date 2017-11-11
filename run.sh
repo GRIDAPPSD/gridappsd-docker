@@ -45,13 +45,13 @@ do
   status=$(curl -s --head -w %{http_code} "$viz_url" -o /dev/null)
 done
 
-echo " "
-echo "Opening web browser to the viz container $viz_url"
-if [ `uname` == "Linux" ]; then
- xdg-open $viz_url
-elif [ `uname` == "Darwin" ]; then
- open $viz_url
-else
-  echo " "
-  echo "Please open a browser to $viz_url"
-fi
+# echo " "
+# echo "Opening web browser to the viz container $viz_url"
+# if [ `uname` == "Linux" ]; then
+#  xdg-open $viz_url
+# elif [ `uname` == "Darwin" ]; then
+#  open $viz_url
+# else
+#   echo " "
+#   echo "Please open a browser to $viz_url"
+# fi
