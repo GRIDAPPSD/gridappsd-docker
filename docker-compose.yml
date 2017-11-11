@@ -42,7 +42,7 @@ services:
       - 61613:61613
     working_dir: /gridappsd
     environment:
-      - PATH=/gridappsd/bin:/gridappsd/lib:$PATH
+      - PATH=/gridappsd/bin:/gridappsd/lib:/gridappsd/services/fncsgossbridge/service:$PATH
     volumes:
       - ./conf:/gridappsd/conf
 #      - ./log:/tmp/gridappsd/log
@@ -51,3 +51,7 @@ services:
       - blazegraph
 
     entrypoint: "tail -f /dev/null"
+      #"/gridappsd/gridappsd.run.sh"
+      #"java -jar lib/run.bnd.jar"
+    #"tail -f /dev/null"
+      #"java -jar lib/run.bnd.jar >> /tmp/gridappsd/log/goss-gridappsd.log 2>1"
