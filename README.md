@@ -1,5 +1,10 @@
 # gridappsd-docker
 
+Clone or download the repository
+
+  git clone https://github.com/GRIDAPPSD/gridappsd-docker
+  cd gridappsd-docker
+
 ## Start the docker container services
 
     ./run.sh
