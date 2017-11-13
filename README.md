@@ -1,6 +1,9 @@
 # gridappsd-docker
 
-Clone or download the repository
+## Requirements
+ - docker version 1.09.0 or higher
+
+## Clone or download the repository
 ```
   git clone https://github.com/GRIDAPPSD/gridappsd-docker
   cd gridappsd-docker
