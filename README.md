@@ -36,12 +36,17 @@ Open your browser to http://localhost:8080/ieee8500
 
 Click the triangle in the top right corner to have a simulation run.
 
-## Exiting the container
+## Exiting the container and stopping the containers
 
 ```
 Use Ctrl+C to stop gridappsd from running
 exit
-docker-compose down
+docker-compose stop
+```
+
+## Restarting the containers
+```
+docker-compose start
 ```
 
 ## Future enhancements    
