@@ -1,42 +1,59 @@
 #!/bin/bash
 
-
 usage () {
-  /bin/echo "Usage:  $0 [-c] "
+  /bin/echo "Usage:  $0 [-c] [-g tag] [-h tag]"
   /bin/echo "        -c      remove containers and downloads, pull updated images before starting"
+  /bin/echo "        -g tag  specify gridappsd docker tag"
+  /bin/echo "        -h tag  specify gridappsd viz docker tag"
   exit 2
 }
 
-
 clean_up () {
   echo " "
-  echo "Removing docker containers"
+  echo "Removing the docker containers"
   docker-compose down
 
-  echo " "
-  echo "Removing mysql dump file"
-  rm "$data_dir/gridappsd_mysql_dump.sql" 
+  if [ -f $data_dir/gridappsd_mysql_dump.sql ] ; then
+    echo " "
+    echo "Removing mysql dump file"
+    rm "$data_dir/gridappsd_mysql_dump.sql"
+  fi
 
-  echo " "
-  echo "Removing blazegraph import file"
-  rm "$data_dir/ieee8500.xml"
+  if [ -f $data_dir/ieee8500.xml ] ; then
+    echo " "
+    echo "Removing blazegraph import file"
+    rm "$data_dir/ieee8500.xml"
+  fi
+
+  if [ -f .env ] ; then
+    echo " "
+    echo "Removing the docker .env file"
+    rm .env
+  fi
 
   echo " "
   echo "Pulling updated docker images"
   docker-compose pull
-
 }
-
 
 viz_url="http://localhost:8080/ieee8500"
 blazegraph_url="http://localhost:8889/bigdata/"
 data_dir="dumps"
+# set the default tag for the gridappsd and viz containers
+GRIDAPPSD_TAG=''
+GRIDAPPSDVIZ_TAG=''
 
 # parse options
-while getopts Rcgmps:f:n:d:r:e: option ; do
+while getopts cg:h: option ; do
   case $option in
     c) # Cleanup downloads and containers
       clean_up
+      ;;
+    g) # Pass gridappsd tag to docker-compose
+      GRIDAPPSD_TAG=":$OPTARG"
+      ;;
+    h) # Pass gridappsd viz tag to docker-compose
+      GRIDAPPSDVIZ_TAG=":$OPTARG"
       ;;
     *) # Print Usage
       usage
@@ -45,6 +62,11 @@ while getopts Rcgmps:f:n:d:r:e: option ; do
 done
 shift `expr $OPTIND - 1`
 
+# Create the docker env file with the tag variables
+cat > .env << EOF
+GRIDAPPSD_TAG=$GRIDAPPSD_TAG
+GRIDAPPSDVIZ_TAG=$GRIDAPPSDVIZ_TAG
+EOF
 
 # Mysql
 [ ! -d "$data_dir" ] && mkdir "$data_dir"
@@ -65,8 +87,16 @@ fi
 status=$(curl -s --head -w %{http_code} "$blazegraph_url" -o /dev/null)
 
 echo " "
-echo "Starting docker containers"
+echo "Starting the docker containers"
 docker-compose up -d
+container_status=$?
+
+if [ $container_status -ne 0 ]; then
+  echo " "
+  echo "Error starting containers"
+  echo "Exiting "
+  exit 1
+fi
 
 while [ $status -ne "200" ]
 do
@@ -75,10 +105,27 @@ done
 
 # sleep just a little longer to make sure blazegraph is ready to receive data.
 sleep 3
-echo " "
-echo "Ingesting blazegraph data"
-output=`curl -s -D- -H 'Content-Type: application/xml' --upload-file "$data_dir/ieee8500.xml" -X POST "$blazegraph_url/sparql"`
-echo "Finished uploading blazegraph data"
+
+# Check if blazegraph data is already loaded
+rangeCount=`curl -s -G -H 'Accept: application/xml' "${blazegraph_url}sparql" --data-urlencode ESTCARD | sed 's/.*rangeCount=\"\([0-9]*\)\".*/\1/'`
+if [ $rangeCount -eq 0 ]; then
+  echo " "
+  echo "Ingesting blazegraph data"
+  curl_output=`curl -s -D- -H 'Content-Type: application/xml' --upload-file "$data_dir/ieee8500.xml" -X POST "${blazegraph_url}sparql"`
+
+  echo " "
+  echo "Verifying blazegraph data"
+  rangeCount=`curl -s -G -H 'Accept: application/xml' "${blazegraph_url}sparql" --data-urlencode ESTCARD | sed 's/.*rangeCount=\"\([0-9]*\)\".*/\1/'`
+
+  echo " "
+  if [ $rangeCount -gt 0 ]; then
+    echo "Finished uploading blazegraph data"
+  else
+    echo "Error blazegraph data failed to load"
+    echo $curl_output
+    ## should we exit here?
+  fi
+fi
 
 status="0"
 while [ $status -ne "200" ]
@@ -96,5 +143,8 @@ done
 #   echo " "
 #   echo "Please open a browser to $viz_url"
 # fi
+
+echo " "
+echo "Containers are running"
 
 exit 0

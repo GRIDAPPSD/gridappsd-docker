@@ -2,12 +2,18 @@
 
 ## Requirements
  - docker version 1.09.0 or higher
+ - docker-compose version 1.16.1 or higher
+ - user must be a member of the docker group to run docker without sudo
+```
+ sudo usermod -a -G docker $USER
+```
 
 ## Clone or download the repository
 ```
   git clone https://github.com/GRIDAPPSD/gridappsd-docker
   cd gridappsd-docker
 ```
+
 ## Start the docker container services
 ```
 ./run.sh
@@ -41,12 +47,12 @@ Click the triangle in the top right corner to have a simulation run.
 ```
 Use Ctrl+C to stop gridappsd from running
 exit
-docker-compose stop
+./stop.sh
 ```
 
 ## Restarting the containers
 ```
-docker-compose start
+./run.sh
 ```
 
 ## Future enhancements    
