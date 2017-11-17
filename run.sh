@@ -63,10 +63,10 @@ done
 shift `expr $OPTIND - 1`
 
 # Create the docker env file with the tag variables
-cat > .env << EOF
-GRIDAPPSD_TAG=$GRIDAPPSD_TAG
-GRIDAPPSDVIZ_TAG=$GRIDAPPSDVIZ_TAG
-EOF
+#cat > .env << EOF
+#GRIDAPPSD_TAG=$GRIDAPPSD_TAG
+#GRIDAPPSDVIZ_TAG=$GRIDAPPSDVIZ_TAG
+#EOF
 
 # Mysql
 [ ! -d "$data_dir" ] && mkdir "$data_dir"
