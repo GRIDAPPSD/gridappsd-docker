@@ -1,6 +1,11 @@
 # gridappsd-docker
 
 ## Requirements
+ - git
+    - OS X requires xcode
+```
+xcode-select --install
+```
  - docker version 1.09.0 or higher
  - docker-compose version 1.16.1 or higher
  - user must be a member of the docker group to run docker without sudo
