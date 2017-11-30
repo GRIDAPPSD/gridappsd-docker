@@ -19,6 +19,12 @@ clean_up () {
     rm "$data_dir/$mysql_file" 
   fi
 
+  if [ -d gridappsdmysql ] ; then
+    echo " "
+    echo "Removing mysql database files"
+    rm -r gridappsdmysql
+  fi
+
   if [ -f $data_dir/ieee8500.xml ] ; then
     echo " "
     echo "Removing blazegraph import file"
