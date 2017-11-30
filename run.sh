@@ -13,10 +13,10 @@ clean_up () {
   echo "Removing the docker containers"
   docker-compose down
 
-  if [ -f $data_dir/gridappsd_mysql_dump.sql ] ; then
+  if [ -f $data_dir/$mysql_file ] ; then
     echo " "
     echo "Removing mysql dump file"
-    rm "$data_dir/gridappsd_mysql_dump.sql"
+    rm "$data_dir/$mysql_file"
   fi
 
   if [ -f $data_dir/ieee8500.xml ] ; then
@@ -38,6 +38,7 @@ clean_up () {
 
 viz_url="http://localhost:8080/ieee8500"
 blazegraph_url="http://localhost:8889/bigdata/"
+mysql_file="gridappsd_mysql.sql"
 data_dir="dumps"
 # set the default tag for the gridappsd and viz containers
 GRIDAPPSD_TAG=''
@@ -70,11 +71,13 @@ shift `expr $OPTIND - 1`
 
 # Mysql
 [ ! -d "$data_dir" ] && mkdir "$data_dir"
-if [ ! -f "$data_dir/gridappsd_mysql_dump.sql" ]; then
+if [ ! -f "$data_dir/$mysql_file" ]; then
   echo " "
   echo "Downloading mysql data"
-  curl -s -o "$data_dir/gridappsd_mysql_dump.sql" "https://raw.githubusercontent.com/GRIDAPPSD/Bootstrap/master/gridappsd_mysql_dump.sql"
-  sed -i '' -e "s/'gridappsd'@'localhost'/'gridappsd'@'%'/g" $data_dir/gridappsd_mysql_dump.sql
+  curl -s -o "$data_dir/$mysql_file" "https://raw.githubusercontent.com/GRIDAPPSD/Bootstrap/master/$mysql_file"
+  sed -i.bak -e "s/'gridappsd'@'localhost'/'gridappsd'@'%'/g" $data_dir/$mysql_file
+  # clean up 
+  rm $data_dir/${mysql_file}.bak
 fi
 
 if [ ! -f "$data_dir/ieee8500.xml" ]; then

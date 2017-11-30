@@ -24,7 +24,7 @@ services:
 
     volumes:
       - ./gridappsdmysql:/var/lib/mysql
-      - ./dumps/gridappsd_mysql_dump.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      - ./dumps/gridappsd_mysql.sql:/docker-entrypoint-initdb.d/schema.sql:ro
 
   viz:
     image: gridappsd/viz
