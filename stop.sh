@@ -39,7 +39,7 @@ clean_up () {
 
 }
 
-mysql_file="gridappsd_mysql.sql"
+mysql_file="gridappsd_mysql_dump.sql"
 data_dir="dumps"
 cleanup=0
 
