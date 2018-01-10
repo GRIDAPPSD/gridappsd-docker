@@ -13,10 +13,16 @@ clean_up () {
   echo "Removing docker containers"
   docker-compose down
 
-  if [ -f $data_dir/gridappsd_mysql_dump.sql ] ; then
+  if [ -f $data_dir/$mysql_file ] ; then
     echo " "
     echo "Removing mysql dump file"
-    rm "$data_dir/gridappsd_mysql_dump.sql" 
+    rm "$data_dir/$mysql_file" 
+  fi
+
+  if [ -d gridappsdmysql ] ; then
+    echo " "
+    echo "Removing mysql database files"
+    rm -r gridappsdmysql
   fi
 
   if [ -f $data_dir/ieee8500.xml ] ; then
@@ -33,6 +39,7 @@ clean_up () {
 
 }
 
+mysql_file="gridappsd_mysql_dump.sql"
 data_dir="dumps"
 cleanup=0
 
