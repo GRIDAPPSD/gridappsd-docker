@@ -27,15 +27,16 @@ services:
       - ./dumps/gridappsd_mysql_dump.sql:/docker-entrypoint-initdb.d/schema.sql:ro
 
   viz:
-    image: gridappsd/viz
+    image: gridappsd/viz${GRIDAPPSD_TAG}
     ports:
       - 8080:8082
 
     depends_on:
       - gridappsd
+    entrypoint: "tail -f /dev/null"
 
   gridappsd:
-    image: gridappsd/gridappsd
+    image: gridappsd/gridappsd${GRIDAPPSD_TAG}
     ports:
       - 61614:61614
       - 61616:61616
