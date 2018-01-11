@@ -34,7 +34,7 @@ services:
       - gridappsd
 
   gridappsd:
-    image: gridappsd/gridappsd
+    image: gridappsd/gridappsd${GRIDAPPSD_TAG}
     ports:
       - 61613:61613
       - 61614:61614
