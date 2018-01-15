@@ -14,7 +14,6 @@ services:
 
   mysql:
     image: mysql/mysql-server:5.7
-
     ports:
       - 3306:3306
 
@@ -27,7 +26,7 @@ services:
       - ./dumps/gridappsd_mysql_dump.sql:/docker-entrypoint-initdb.d/schema.sql:ro
 
   viz:
-    image: gridappsd/viz
+    image: gridappsd/viz${GRIDAPPSD_TAG}
     ports:
       - 8080:8082
 
@@ -35,19 +34,22 @@ services:
       - gridappsd
 
   gridappsd:
-    image: gridappsd/gridappsd
+    image: gridappsd/gridappsd${GRIDAPPSD_TAG}
     ports:
+      - 61613:61613
       - 61614:61614
       - 61616:61616
-      - 61613:61613
+
     working_dir: /gridappsd
     environment:
       - PATH=/gridappsd/bin:/gridappsd/lib:/gridappsd/services/fncsgossbridge/service:$PATH
+
     volumes:
       - ./conf:/gridappsd/conf
       - ./applications:/gridappsd/applications
       - ./services:/gridappsd/services
-      - ./log:/tmp/gridappsd/log
+#      - ./log:/tmp/gridappsd/log
+
     depends_on:
       - mysql
       - blazegraph
@@ -55,5 +57,4 @@ services:
     entrypoint: "tail -f /dev/null"
       #"/gridappsd/gridappsd.run.sh"
       #"java -jar lib/run.bnd.jar"
-    #"tail -f /dev/null"
       #"java -jar lib/run.bnd.jar >> /tmp/gridappsd/log/goss-gridappsd.log 2>1"

@@ -3,8 +3,7 @@
 usage () {
   /bin/echo "Usage:  $0 [-c] [-g tag] [-h tag]"
   /bin/echo "        -c      remove containers and downloads, pull updated images before starting"
-  /bin/echo "        -g tag  specify gridappsd docker tag"
-  /bin/echo "        -h tag  specify gridappsd viz docker tag"
+  /bin/echo "        -t tag  specify gridappsd docker tag"
   exit 2
 }
 
@@ -47,20 +46,16 @@ blazegraph_url="http://localhost:8889/bigdata/"
 mysql_file="gridappsd_mysql_dump.sql"
 data_dir="dumps"
 # set the default tag for the gridappsd and viz containers
-GRIDAPPSD_TAG=''
-GRIDAPPSDVIZ_TAG=''
+GRIDAPPSD_TAG=':rc2'
 
 # parse options
-while getopts cg:h: option ; do
+while getopts ct: option ; do
   case $option in
     c) # Cleanup downloads and containers
       clean_up
       ;;
-    g) # Pass gridappsd tag to docker-compose
+    t) # Pass gridappsd tag to docker-compose
       GRIDAPPSD_TAG=":$OPTARG"
-      ;;
-    h) # Pass gridappsd viz tag to docker-compose
-      GRIDAPPSDVIZ_TAG=":$OPTARG"
       ;;
     *) # Print Usage
       usage
@@ -70,10 +65,9 @@ done
 shift `expr $OPTIND - 1`
 
 # Create the docker env file with the tag variables
-#cat > .env << EOF
-#GRIDAPPSD_TAG=$GRIDAPPSD_TAG
-#GRIDAPPSDVIZ_TAG=$GRIDAPPSDVIZ_TAG
-#EOF
+cat > .env << EOF
+GRIDAPPSD_TAG=$GRIDAPPSD_TAG
+EOF
 
 # Mysql
 [ ! -d "$data_dir" ] && mkdir "$data_dir"
