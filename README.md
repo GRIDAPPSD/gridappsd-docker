@@ -8,7 +8,7 @@ xcode-select --install
 ```
  - docker version 1.09.0 or higher
  - docker-compose version 1.16.1 or higher
- - user must be a member of the docker group to run docker without sudo
+ - on linux systems, user must be a member of the docker group to run docker without sudo
 ```
  sudo usermod -a -G docker $USER
 ```
