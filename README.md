@@ -2,7 +2,7 @@
 
 ## Requirements
 
-- OS X
+## Docker and prerequisite install on OS X
  - git
     - OS X requires xcode
  ```
@@ -11,7 +11,7 @@
   - docker version 1.09.0 or higher
   - docker-compose version 1.16.1 or higher
   - user must be a member of the docker group to run docker without sudo
-- Ubuntu
+## Docker and prerequisite install on Ubuntu
  - git
  - docker-ce 
         - Based on instructions from https://docs.docker.com/install/linux/docker-ce/ubuntu/#set-up-the-repository
@@ -46,7 +46,7 @@
 
 
 
-Add current user to docker group
+## Add current user to docker group
 
 ```
  sudo usermod -a -G docker $USER
