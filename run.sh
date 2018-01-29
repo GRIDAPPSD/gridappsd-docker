@@ -1,7 +1,7 @@
 #!/bin/bash
 
 usage () {
-  /bin/echo "Usage:  $0 [-c] [-g tag] [-h tag]"
+  /bin/echo "Usage:  $0 [-c] [-t tag]"
   /bin/echo "        -c      remove containers and downloads, pull updated images before starting"
   /bin/echo "        -t tag  specify gridappsd docker tag"
   exit 2
@@ -38,7 +38,26 @@ clean_up () {
 
   echo " "
   echo "Pulling updated docker images"
+  create_env 
   docker-compose pull
+}
+
+create_env () {
+  if [ -f '.env' ]; then
+    prevtag=`cat .env | sed 's/GRIDAPPSD_TAG=://'`
+    currtag=`echo $GRIDAPPSD_TAG | sed 's/://'`
+    if [ "$prevtag" != "$currtag" ]; then
+      echo "Error changing tag from $prevtag to $currtag"
+      #echo "Please remove previous versions by runing ./stop.sh -c"
+      exit 1
+    fi
+  else
+    echo "Create the docker env file with the tag variables"
+    # Create the docker env file with the tag variables
+    cat > .env << EOF
+GRIDAPPSD_TAG=$GRIDAPPSD_TAG
+EOF
+  fi
 }
 
 viz_url="http://localhost:8080/ieee8500"
@@ -64,10 +83,7 @@ while getopts ct: option ; do
 done
 shift `expr $OPTIND - 1`
 
-# Create the docker env file with the tag variables
-cat > .env << EOF
-GRIDAPPSD_TAG=$GRIDAPPSD_TAG
-EOF
+create_env
 
 # Mysql
 [ ! -d "$data_dir" ] && mkdir "$data_dir"
