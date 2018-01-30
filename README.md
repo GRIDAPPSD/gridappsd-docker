@@ -1,17 +1,42 @@
 # gridappsd-docker
 
 ## Requirements
+
+## Docker and prerequisite install on OS X
  - git
     - OS X requires xcode
-```
-xcode-select --install
-```
- - docker version 1.09.0 or higher
- - docker-compose version 1.16.1 or higher
- - on linux systems, user must be a member of the docker group to run docker without sudo
-```
- sudo usermod -a -G docker $USER
-```
+ ```
+ xcode-select --install
+ ```
+  - docker version 1.09.0 or higher
+  - docker-compose version 1.16.1 or higher
+## Docker and prerequisite install on Ubuntu
+ - git
+ - docker-ce 
+        - Based on instructions from https://docs.docker.com/install/linux/docker-ce/ubuntu/#set-up-the-repository
+        ```
+         sudo apt-get update
+         
+         sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
+         
+         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
+         
+         sudo apt-key fingerprint 0EBFCD88
+         
+         sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+         
+         sudo apt-get update
+         
+         sudo apt-get install docker-ce
+
+         sudo usermod -a -G docker $USER
+        ```
+   - docker-compose   
+     - Based on instructions from https://docs.docker.com/compose/install/
+      ```
+        sudo curl -L https://github.com/docker/compose/releases/download/1.18.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
+        sudo chmod a+x /usr/local/bin/docker-compose
+      ```
 
 ## Clone or download the repository
 ```
