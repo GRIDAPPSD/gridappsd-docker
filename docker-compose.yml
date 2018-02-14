@@ -34,20 +34,21 @@ services:
       - gridappsd
 
   gridappsd:
-    image: gridappsd/gridappsd${GRIDAPPSD_TAG}
+    image: gridappsd
     ports:
       - 61613:61613
       - 61614:61614
       - 61616:61616
+      - 8000:8000
 
     working_dir: /gridappsd
     environment:
       - PATH=/gridappsd/bin:/gridappsd/lib:/gridappsd/services/fncsgossbridge/service:$PATH
-
-    volumes:
-      - ./conf:/gridappsd/conf
-      - ./applications:/gridappsd/applications
-      - ./services:/gridappsd/services
+      - DEBUG=1
+    #volumes:
+     # - ./conf:/gridappsd/conf
+     # - ./applications:/gridappsd/applications
+     # - ./services:/gridappsd/services
 #      - ./log:/tmp/gridappsd/log
 
     depends_on:
