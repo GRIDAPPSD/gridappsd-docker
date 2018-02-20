@@ -65,7 +65,7 @@ blazegraph_url="http://localhost:8889/bigdata/"
 mysql_file="gridappsd_mysql_dump.sql"
 data_dir="dumps"
 # set the default tag for the gridappsd and viz containers
-GRIDAPPSD_TAG=':rc2'
+GRIDAPPSD_TAG=':rc3'
 
 # parse options
 while getopts ct: option ; do
