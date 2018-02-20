@@ -168,4 +168,6 @@ done
 echo " "
 echo "Containers are running"
 
+docker exec -it gridappsddocker_gridappsd_1 /bin/bash
+
 exit 0
