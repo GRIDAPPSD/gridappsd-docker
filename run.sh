@@ -1,45 +1,9 @@
 #!/bin/bash
 
 usage () {
-  /bin/echo "Usage:  $0 [-c] [-t tag]"
-  /bin/echo "        -c      remove containers and downloads, pull updated images before starting"
+  /bin/echo "Usage:  $0 [-t tag]"
   /bin/echo "        -t tag  specify gridappsd docker tag"
   exit 2
-}
-
-clean_up () {
-  echo " "
-  echo "Removing the docker containers"
-  docker-compose down
-
-  if [ -f $data_dir/$mysql_file ] ; then
-    echo " "
-    echo "Removing mysql dump file"
-    rm "$data_dir/$mysql_file"
-  fi
-
-  if [ -d gridappsdmysql ] ; then
-    echo " "
-    echo "Removing mysql database files"
-    rm -r gridappsdmysql
-  fi
-
-  if [ -f $data_dir/ieee8500.xml ] ; then
-    echo " "
-    echo "Removing blazegraph import file"
-    rm "$data_dir/ieee8500.xml"
-  fi
-
-  if [ -f .env ] ; then
-    echo " "
-    echo "Removing the docker .env file"
-    rm .env
-  fi
-
-  echo " "
-  echo "Pulling updated docker images"
-  create_env 
-  docker-compose pull
 }
 
 create_env () {
@@ -61,6 +25,7 @@ EOF
 }
 
 viz_url="http://localhost:8080/ieee8500"
+blazegraph_models="EPRI_DPV_J1.xml IEEE123.xml R2_12_47_2.xml ieee8500.xml"
 blazegraph_url="http://localhost:8889/bigdata/"
 mysql_file="gridappsd_mysql_dump.sql"
 data_dir="dumps"
@@ -68,11 +33,8 @@ data_dir="dumps"
 GRIDAPPSD_TAG=':rc3'
 
 # parse options
-while getopts ct: option ; do
+while getopts t: option ; do
   case $option in
-    c) # Cleanup downloads and containers
-      clean_up
-      ;;
     t) # Pass gridappsd tag to docker-compose
       GRIDAPPSD_TAG=":$OPTARG"
       ;;
@@ -95,14 +57,23 @@ if [ ! -f "$data_dir/$mysql_file" ]; then
     sed -i'.bak' -e "s/'gridappsd'@'localhost'/'gridappsd'@'%'/g" $data_dir/$mysql_file
     # clean up 
     rm $data_dir/${mysql_file}.bak
+  else
+    echo "Error downloading $data_dir/$mysql_file"
+    exit 1
   fi
 fi
 
-if [ ! -f "$data_dir/ieee8500.xml" ]; then
-  echo " "
-  echo "Downloading blazegraph data"
-  curl -s -o "$data_dir/ieee8500.xml" "https://raw.githubusercontent.com/GRIDAPPSD/Bootstrap/master/ieee8500.xml"
-fi
+echo " "
+for blazegraph_file in $blazegraph_models; do
+  if [ ! -f "$data_dir/$blazegraph_file" ]; then
+    echo "Downloading blazegraph data $blazegraph_file"
+    curl -s -o "$data_dir/$blazegraph_file" "https://raw.githubusercontent.com/GRIDAPPSD/Bootstrap/master/$blazegraph_file"
+    if [ ! -f "$data_dir/$blazegraph_file" ]; then
+      echo "Error downloading $data_dir/$blazegraph_file"
+      exit 1
+    fi
+  fi
+done
 
 
 status=$(curl -s --head -w %{http_code} "$blazegraph_url" -o /dev/null)
@@ -129,22 +100,31 @@ sleep 3
 
 # Check if blazegraph data is already loaded
 rangeCount=`curl -s -G -H 'Accept: application/xml' "${blazegraph_url}sparql" --data-urlencode ESTCARD | sed 's/.*rangeCount=\"\([0-9]*\)\".*/\1/'`
-if [ $rangeCount -eq 0 ]; then
-  echo " "
-  echo "Ingesting blazegraph data"
-  curl_output=`curl -s -D- -H 'Content-Type: application/xml' --upload-file "$data_dir/ieee8500.xml" -X POST "${blazegraph_url}sparql"`
+if [ x"$rangeCount" == x"0" ]; then
+  for blazegraph_file in $blazegraph_models; do
+    echo " "
+    echo "Ingesting blazegraph data $data_dir/$blazegraph_file ${blazegraph_url}sparql"
+    #echo "curl -s -D- -H 'Content-Type: application/xml' --upload-file \"$data_dir/$blazegraph_file\" -X POST \"${blazegraph_url}sparql\""
+    curl_output=`curl -s -D- -H 'Content-Type: application/xml' --upload-file "$data_dir/$blazegraph_file" -X POST "${blazegraph_url}sparql"`
+    bz_status=`echo $curl_output | grep -c 'data modified='`
+
+    if [ ${bz_status:-0} -ne 1 ]; then
+      echo " "
+      echo "Error could not load blazegraph data $data_dir/$blazegraph_file"
+    fi
+  done
 
   echo " "
   echo "Verifying blazegraph data"
   rangeCount=`curl -s -G -H 'Accept: application/xml' "${blazegraph_url}sparql" --data-urlencode ESTCARD | sed 's/.*rangeCount=\"\([0-9]*\)\".*/\1/'`
 
   echo " "
-  if [ $rangeCount -gt 0 ]; then
-    echo "Finished uploading blazegraph data"
+  if [ ${rangeCount:-0} -gt 0 ]; then
+    echo "Finished uploading blazegraph data ($rangeCount)"
   else
     echo "Error blazegraph data failed to load"
-    echo $curl_output
-    ## should we exit here?
+    #echo $curl_output
+    exit 1
   fi
 fi
 

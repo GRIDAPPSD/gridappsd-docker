@@ -45,17 +45,12 @@ services:
     environment:
       - PATH=/gridappsd/bin:/gridappsd/lib:/gridappsd/services/fncsgossbridge/service:$PATH
       - DEBUG=1
-    #volumes:
-     # - ./conf:/gridappsd/conf
-     # - ./applications:/gridappsd/applications
-     # - ./services:/gridappsd/services
-#      - ./log:/tmp/gridappsd/log
+
+    volumes:
+      - ~/git/gridappsd-sample-app/sample_app:/gridappsd/applications/sample_app
+      - ~/git/gridappsd-sample-app/sample_app/sample_app.config:/gridappsd/applications/sample_app.config
 
     depends_on:
       - mysql
       - blazegraph
 
-    entrypoint: "tail -f /dev/null"
-      #"/gridappsd/gridappsd.run.sh"
-      #"java -jar lib/run.bnd.jar"
-      #"java -jar lib/run.bnd.jar >> /tmp/gridappsd/log/goss-gridappsd.log 2>1"

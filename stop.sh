@@ -18,18 +18,27 @@ clean_up () {
     echo "Removing mysql dump file"
     rm "$data_dir/$mysql_file" 
   fi
-
-  if [ -d gridappsdmysql ] ; then
+  
+  # download may sometimes fail and create a directory
+  if [ -d $data_dir/$mysql_file ] ; then
     echo " "
-    echo "Removing mysql database files"
-    rm -r gridappsdmysql
+    echo "Removing mysql dump file"
+    rmdir "$data_dir/$mysql_file" 
   fi
 
-  if [ -f $data_dir/ieee8500.xml ] ; then
-    echo " "
-    echo "Removing blazegraph import file"
-    rm "$data_dir/ieee8500.xml"
-  fi
+  echo " "
+  for blazegraph_file in $blazegraph_models; do
+    if [ -f $data_dir/$blazegraph_file ] ; then
+      echo "Removing blazegraph import file $blazegraph_file"
+      rm "$data_dir/$blazegraph_file"
+    fi
+    # download may sometimes fail and create a directory
+    if [ -d $data_dir/$blazegraph_file ] ; then
+      echo " "
+      echo "Removing blazegraph import file $blazegraph_file"
+      rmdir "$data_dir/$blazegraph_file"
+    fi
+  done
 
   if [ -f .env ] ; then
     echo " "
@@ -37,8 +46,19 @@ clean_up () {
     rm .env
   fi
 
+  if [ -d gridappsdmysql ] ; then
+    echo " "
+    if [ -O gridappsdmysql ] ; then
+      echo "Removing mysql database files"
+      rm -r gridappsdmysql
+    else
+      echo "Unable to remove gridappsdmysql, please run the following command."
+      echo "sudo rm -r gridappsdmysql"
+    fi
+  fi
 }
 
+blazegraph_models="EPRI_DPV_J1.xml IEEE123.xml R2_12_47_2.xml ieee8500.xml"
 mysql_file="gridappsd_mysql_dump.sql"
 data_dir="dumps"
 cleanup=0
