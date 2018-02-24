@@ -16,6 +16,7 @@ create_env () {
       exit 1
     fi
   else
+    echo " "
     echo "Create the docker env file with the tag variables"
     # Create the docker env file with the tag variables
     cat > .env << EOF
@@ -98,31 +99,27 @@ done
 # sleep just a little longer to make sure blazegraph is ready to receive data.
 sleep 3
 
+echo " "
 # Check if blazegraph data is already loaded
 rangeCount=`curl -s -G -H 'Accept: application/xml' "${blazegraph_url}sparql" --data-urlencode ESTCARD | sed 's/.*rangeCount=\"\([0-9]*\)\".*/\1/'`
 if [ x"$rangeCount" == x"0" ]; then
   for blazegraph_file in $blazegraph_models; do
-    echo " "
-    echo "Ingesting blazegraph data $data_dir/$blazegraph_file ${blazegraph_url}sparql"
+    echo "Ingesting blazegraph data $data_dir/$blazegraph_file ${blazegraph_url}sparql ($rangeCount)"
     #echo "curl -s -D- -H 'Content-Type: application/xml' --upload-file \"$data_dir/$blazegraph_file\" -X POST \"${blazegraph_url}sparql\""
     curl_output=`curl -s -D- -H 'Content-Type: application/xml' --upload-file "$data_dir/$blazegraph_file" -X POST "${blazegraph_url}sparql"`
     bz_status=`echo $curl_output | grep -c 'data modified='`
 
     if [ ${bz_status:-0} -ne 1 ]; then
-      echo " "
       echo "Error could not load blazegraph data $data_dir/$blazegraph_file"
     fi
+    #echo "Verifying blazegraph data"
+    rangeCount=`curl -s -G -H 'Accept: application/xml' "${blazegraph_url}sparql" --data-urlencode ESTCARD | sed 's/.*rangeCount=\"\([0-9]*\)\".*/\1/'`
   done
 
-  echo " "
-  echo "Verifying blazegraph data"
-  rangeCount=`curl -s -G -H 'Accept: application/xml' "${blazegraph_url}sparql" --data-urlencode ESTCARD | sed 's/.*rangeCount=\"\([0-9]*\)\".*/\1/'`
-
-  echo " "
   if [ ${rangeCount:-0} -gt 0 ]; then
     echo "Finished uploading blazegraph data ($rangeCount)"
   else
-    echo "Error blazegraph data failed to load"
+
     #echo $curl_output
     exit 1
   fi
