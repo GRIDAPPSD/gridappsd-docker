@@ -17,6 +17,7 @@
  ```
  docker_install_ubuntu.sh
  ```
+  - log out of your Ubuntu session and log back in to make the docker groups change active
 
 ## Clone or download the repository
 ```
