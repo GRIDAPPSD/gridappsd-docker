@@ -1,6 +1,9 @@
 # gridappsd-docker
 
 ## Requirements
+  - git
+  - docker version 17.12 or higher
+  - docker-compose version 1.16.1 or higher
 
 ## Docker and prerequisite install on OS X
  - git
@@ -8,35 +11,12 @@
  ```
  xcode-select --install
  ```
-  - docker version 1.09.0 or higher
-  - docker-compose version 1.16.1 or higher
-## Docker and prerequisite install on Ubuntu
- - git
- - docker-ce 
-        - Based on instructions from https://docs.docker.com/install/linux/docker-ce/ubuntu/#set-up-the-repository
-        ```
-         sudo apt-get update
-         
-         sudo apt-get install apt-transport-https ca-certificates curl software-properties-common
-         
-         curl -fsSL https://download.docker.com/linux/ubuntu/gpg | sudo apt-key add -
-         
-         sudo apt-key fingerprint 0EBFCD88
-         
-         sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
-         
-         sudo apt-get update
-         
-         sudo apt-get install docker-ce
 
-         sudo usermod -a -G docker $USER
-        ```
-   - docker-compose   
-     - Based on instructions from https://docs.docker.com/compose/install/
-      ```
-        sudo curl -L https://github.com/docker/compose/releases/download/1.18.0/docker-compose-`uname -s`-`uname -m` -o /usr/local/bin/docker-compose
-        sudo chmod a+x /usr/local/bin/docker-compose
-      ```
+## Docker and prerequisite install on Ubuntu
+  - run the docker-ce installation script
+ ```
+ docker_install_ubuntu.sh
+ ```
 
 ## Clone or download the repository
 ```
@@ -55,14 +35,10 @@ The run.sh does the folowing
  -  download the services
  -  start the docker containers
  -  ingest the blazegraph data
+ -  connect to the gridappsd container
 
 ## Start gridappsd
 
-Connect to the running gridappsd container
-```
-user@foo>docker exec -it gridappsddocker_gridappsd_1 bash
-
-```
 Now we are inside the executing container
 ```
 root@737c30c82df7:/gridappsd# ./gridappsd.run.sh
@@ -83,6 +59,14 @@ exit
 ## Restarting the containers
 ```
 ./run.sh
+```
+
+## Reconnecting to the gridappsd container
+
+Reconnect to the running gridappsd container
+```
+user@foo>docker exec -it gridappsddocker_gridappsd_1 bash
+
 ```
 
 ## Future enhancements    
