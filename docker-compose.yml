@@ -1,7 +1,6 @@
 version: '2'
 
 services:
-
   blazegraph:
     image: lyrasis/blazegraph:2.1.4
     ports:
@@ -36,17 +35,35 @@ services:
   gridappsd:
     image: gridappsd
     ports:
+      # Each of the following are port mappings from the host into the 
+      # container.  The first three are used by GridAPPS-D for the different
+      # protocols.
       - 61613:61613
       - 61614:61614
       - 61616:61616
+      # Uncomment to allow debugging on this port
       - 8000:8000
+      # Add debugging to your application via the following port
+      - 8888:8888
 
     working_dir: /gridappsd
     environment:
       - PATH=/gridappsd/bin:/gridappsd/lib:/gridappsd/services/fncsgossbridge/service:$PATH
+      # Debugging is only necessary if you intend to remote debug the GridAPPS-D process iself.
+      # Turning this on will allow the user to remote debug the gridappsd server on port 8000.
       - DEBUG=1
-
-# uncomment the volumes section for application support
+# The following allow applicatoins to be mounted into the container so that
+# gridappsd can start them in the correct context.
+#
+# The format is local_path:container_path where local_path is on the host machine and the
+# container_dir is inside the container.  The paths can be either a file or a directory.  In
+# order for gridappsd to recognize it as an application the container path must be inside
+# the /gridappsd/applications.  For services the container path must be inside /gridappsd/services.
+#
+# The following assumes you have cloned/downloaded the sample app in a sibling folder of this
+# repository.  Once uncommenting the three lines below the sample_app will be available in the
+# container
+#
 #    volumes:
 #      - ~/git/gridappsd-sample-app/sample_app:/gridappsd/applications/sample_app
 #      - ~/git/gridappsd-sample-app/sample_app/sample_app.config:/gridappsd/applications/sample_app.config
