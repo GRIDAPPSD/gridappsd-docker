@@ -52,7 +52,7 @@ services:
       # Debugging is only necessary if you intend to remote debug the GridAPPS-D process iself.
       # Turning this on will allow the user to remote debug the gridappsd server on port 8000.
       - DEBUG=1
-# The following allow applicatoins to be mounted into the container so that
+# The following allow applications to be mounted into the container so that
 # gridappsd can start them in the correct context.
 #
 # The format is local_path:container_path where local_path is on the host machine and the
