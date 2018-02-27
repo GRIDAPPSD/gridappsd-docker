@@ -15,7 +15,7 @@
 ## Docker and prerequisite install on Ubuntu
   - run the docker-ce installation script
  ```
- docker_install_ubuntu.sh
+ ./docker_install_ubuntu.sh
  ```
   - log out of your Ubuntu session and log back in to make the docker groups change active
 
@@ -42,7 +42,7 @@ The run.sh does the folowing
 
 Now we are inside the executing container
 ```
-root@737c30c82df7:/gridappsd# ./gridappsd.run.sh
+root@737c30c82df7:/gridappsd# ./run-docker.sh
 
 ```
 Open your browser to http://localhost:8080/ieee8500
