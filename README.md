@@ -12,18 +12,18 @@
  xcode-select --install
  ```
 
-## Docker and prerequisite install on Ubuntu
-  - run the docker-ce installation script
- ```
- ./docker_install_ubuntu.sh
- ```
-  - log out of your Ubuntu session and log back in to make the docker groups change active
-
 ## Clone or download the repository
 ```
   git clone https://github.com/GRIDAPPSD/gridappsd-docker
   cd gridappsd-docker
 ```
+
+## Install Docker on Ubuntu
+  - run the docker-ce installation script
+ ```
+ ./docker_install_ubuntu.sh
+ ```
+  - log out of your Ubuntu session and log back in to make the docker groups change active
 
 ## Start the docker container services
 ```
@@ -32,8 +32,6 @@
 The run.sh does the folowing
  -  download the mysql dump file
  -  download the blazegraph data
- -  download the applications
- -  download the services
  -  start the docker containers
  -  ingest the blazegraph data
  -  connect to the gridappsd container
