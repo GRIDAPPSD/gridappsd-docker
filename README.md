@@ -68,5 +68,5 @@ user@foo>docker exec -it gridappsddocker_gridappsd_1 bash
 
 ```
 
-## Future enhancements    
-  -  open a web browser to the viz container http://localhost:8080
+## Next Steps
+  - Add applications/services to the containers (see how <https://github.com/GRIDAPPSD/gridappsd-sample-app>)
