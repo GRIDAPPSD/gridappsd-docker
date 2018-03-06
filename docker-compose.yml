@@ -33,7 +33,7 @@ services:
       - gridappsd
 
   gridappsd:
-    image: gridappsd
+    image: gridappsd/gridappsd${GRIDAPPSD_TAG}
     ports:
       # Each of the following are port mappings from the host into the 
       # container.  The first three are used by GridAPPS-D for the different
