@@ -51,22 +51,25 @@ clean_up () {
     rm .env
   fi
 
-  if [ -d gridappsdmysql ] ; then
-    echo " "
-    if [ -O gridappsdmysql ] ; then
-      echo "Removing mysql database files"
-      rm -r gridappsdmysql
-    else
-      echo "Error: unable to remove gridappsdmysql, please run the following command."
-      echo "sudo rm -r gridappsdmysql"
+  for dbdir in $database_dirs; do
+    if [ -d $dbdir ] ; then
+      echo " "
+      if [ -O $dbdir ] ; then
+        echo "Removing $dbdir database files"
+        rm -r $dbdir
+      else
+        echo "Error: unable to remove $dbdir, please run the following command."
+        echo "sudo rm -r $dbdir"
+      fi
     fi
-  fi
+  done
 }
 
 blazegraph_models="EPRI_DPV_J1.xml IEEE123.xml R2_12_47_2.xml ieee8500.xml"
 mysql_file="gridappsd_mysql_dump.sql"
 data_dir="dumps"
 cleanup=0
+database_dirs="gridappsdmysql gridappsdproven gridappsdinfluxdb"
 
 # parse options
 while getopts cw option ; do
