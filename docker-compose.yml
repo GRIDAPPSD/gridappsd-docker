@@ -11,6 +11,16 @@ services:
       - ./gridappsd/blazegraph/data:/data
       - ./conf/rwstore.properties:/RWStore.properties
 
+  redis:
+    image: redis:3.2.11-alpine
+    ports:
+      - 6379:6379
+
+    volumes:
+      - ./gridappsd/redis/data:/data
+    entrypoint: redis-server --appendonly yes
+    restart: always
+
   mysql:
     image: mysql/mysql-server:5.7
     ports:
@@ -35,7 +45,7 @@ services:
   gridappsd:
     image: gridappsd/gridappsd${GRIDAPPSD_TAG}
     ports:
-      # Each of the following are port mappings from the host into the 
+      # Each of the following are port mappings from the host into the
       # container.  The first three are used by GridAPPS-D for the different
       # protocols.
       - 61613:61613
@@ -71,4 +81,5 @@ services:
     depends_on:
       - mysql
       - blazegraph
+      - redis
 
