@@ -25,8 +25,8 @@ EOF
   fi
 }
 
-viz_url="http://localhost:8080/ieee8500"
-blazegraph_models="EPRI_DPV_J1.xml IEEE123.xml R2_12_47_2.xml ieee8500.xml"
+viz_url="http://localhost:8080/"
+blazegraph_models="EPRI_DPV_J1.xml IEEE123.xml R2_12_47_2.xml IEEE8500.xml"
 blazegraph_url="http://localhost:8889/bigdata/"
 mysql_file="gridappsd_mysql_dump.sql"
 data_dir="dumps"
@@ -68,7 +68,8 @@ echo " "
 for blazegraph_file in $blazegraph_models; do
   if [ ! -f "$data_dir/$blazegraph_file" ]; then
     echo "Downloading blazegraph data $blazegraph_file"
-    curl -s -o "$data_dir/$blazegraph_file" "https://raw.githubusercontent.com/GRIDAPPSD/Bootstrap/master/$blazegraph_file"
+    #curl -s -o "$data_dir/$blazegraph_file" "https://raw.githubusercontent.com/GRIDAPPSD/Bootstrap/master/$blazegraph_file"
+    curl -s -o "$data_dir/$blazegraph_file" "https://raw.githubusercontent.com/GRIDAPPSD/Powergrid-Models/master/blazegraph/test/$blazegraph_file"
     if [ ! -f "$data_dir/$blazegraph_file" ]; then
       echo "Error downloading $data_dir/$blazegraph_file"
       exit 1
@@ -81,6 +82,8 @@ status=$(curl -s --head -w %{http_code} "$blazegraph_url" -o /dev/null)
 
 echo " "
 echo "Starting the docker containers"
+echo " "
+echo " "
 docker-compose up -d
 container_status=$?
 
@@ -91,13 +94,26 @@ if [ $container_status -ne 0 ]; then
   exit 1
 fi
 
-while [ $status -ne "200" ]
+echo " "
+echo "Getting blazegraph status"
+count=0
+while [ $status -ne "200" -a $count -lt 3 ]
 do
   status=$(curl -s --head -w %{http_code} "$blazegraph_url" -o /dev/null)
+  #count=`expr $count + 1`
 done
+
+#if [ $count == 2]; then
+#  echo "Error contacting blazegraph"
+#  exit 1
+#fi
 
 # sleep just a little longer to make sure blazegraph is ready to receive data.
 sleep 3
+
+bz_load_status=0
+echo " "
+echo "Loading blazegraph data"
 
 echo " "
 # Check if blazegraph data is already loaded
@@ -111,15 +127,17 @@ if [ x"$rangeCount" == x"0" ]; then
 
     if [ ${bz_status:-0} -ne 1 ]; then
       echo "Error could not load blazegraph data $data_dir/$blazegraph_file"
+      echo $curl_output
+      bz_load_status=1
     fi
     #echo "Verifying blazegraph data"
     rangeCount=`curl -s -G -H 'Accept: application/xml' "${blazegraph_url}sparql" --data-urlencode ESTCARD | sed 's/.*rangeCount=\"\([0-9]*\)\".*/\1/'`
   done
 
-  if [ ${rangeCount:-0} -gt 0 ]; then
+  if [ ${rangeCount:-0} -gt 0  -a $bz_load_status == 0 ]; then
     echo "Finished uploading blazegraph data ($rangeCount)"
   else
-
+    echo "Error loading blazegraph data ($rangeCount)"
     #echo $curl_output
     exit 1
   fi
