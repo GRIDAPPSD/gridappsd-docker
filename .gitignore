@@ -3,3 +3,4 @@ gridappsd
 gridappsdmysql
 applications
 services
+.env

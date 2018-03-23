@@ -63,7 +63,7 @@ clean_up () {
   fi
 }
 
-blazegraph_models="EPRI_DPV_J1.xml IEEE123.xml R2_12_47_2.xml IEEE8500.xml"
+blazegraph_models="EPRI_DPV_J1.xml IEEE123.xml R2_12_47_2.xml IEEE8500.xml ieee8500.xml"
 mysql_file="gridappsd_mysql_dump.sql"
 data_dir="dumps"
 cleanup=0
