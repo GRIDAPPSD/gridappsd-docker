@@ -129,7 +129,7 @@ echo " "
 for blazegraph_file in $blazegraph_models; do
   if [ ! -f "$data_dir/$blazegraph_file" ]; then
     echo "Downloading blazegraph data $blazegraph_file"
-    debug_msg "curl -s -o \"$data_dir/$blazegraph_file\" \"https://raw.githubusercontent.com/GRIDAPPSD/Bootstrap/master/$blazegraph_file\""
+    debug_msg "curl -s -o \"$data_dir/$blazegraph_file\" \"https://raw.githubusercontent.com/GRIDAPPSD/Powergrid-Models/master/blazegraph/test/$blazegraph_file\""
     curl -s -o "$data_dir/$blazegraph_file" "https://raw.githubusercontent.com/GRIDAPPSD/Powergrid-Models/master/blazegraph/test/$blazegraph_file"
     if [ ! -f "$data_dir/$blazegraph_file" ]; then
       echo "Error downloading $data_dir/$blazegraph_file"
