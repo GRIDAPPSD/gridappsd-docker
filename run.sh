@@ -83,7 +83,7 @@ mysql_file="gridappsd_mysql_dump.sql"
 data_dir="dumps"
 debug=0
 # set the default tag for the gridappsd and viz containers
-GRIDAPPSD_TAG=':rc3'
+GRIDAPPSD_TAG=':dev'
 
 # parse options
 while getopts dpt: option ; do
