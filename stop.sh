@@ -69,7 +69,7 @@ blazegraph_models="EPRI_DPV_J1.xml IEEE123.xml R2_12_47_2.xml ieee8500.xml"
 mysql_file="gridappsd_mysql_dump.sql"
 data_dir="dumps"
 cleanup=0
-database_dirs="gridappsdmysql gridappsdproven gridappsdinfluxdb"
+database_dirs="gridappsdmysql gridappsd"
 
 # parse options
 while getopts cw option ; do

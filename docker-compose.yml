@@ -97,13 +97,13 @@ services:
       - PROVEN_IDB_PASSWORD=root
       - PROVEN_T3DIR=/proven
     volumes:
-      - ./gridappsdproven:/proven
+      - ./gridappsd/proven:/proven
     command: ["--deploy", "/opt/payara/deployments/proven.war"]
 
   influxdb:
     image: influxdb
     volumes:
-      - ./gridappsdinfluxdb:/var/lib/influxdb
+      - ./gridappsd/influxdb:/var/lib/influxdb
     environment:
       INFLUXDB_DB: "proven"
     ports:
