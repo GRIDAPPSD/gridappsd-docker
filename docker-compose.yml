@@ -99,6 +99,7 @@ services:
     volumes:
       - ./gridappsd/proven:/proven
     command: ["--deploy", "/opt/payara/deployments/proven.war"]
+    user: root
 
   influxdb:
     image: influxdb
