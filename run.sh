@@ -37,12 +37,10 @@ debug_msg() {
   fi
 }
 
-
 pull_containers() {
   echo " "
   echo "Pulling updated containers"
   docker-compose pull
-  exit 0 
 }
 
 http_status_container() {
@@ -82,6 +80,7 @@ url_blazegraph="http://localhost:8889/bigdata/"
 mysql_file="gridappsd_mysql_dump.sql"
 data_dir="dumps"
 debug=0
+exists=0
 # set the default tag for the gridappsd and viz containers
 GRIDAPPSD_TAG=':dev'
 
@@ -93,6 +92,7 @@ while getopts dpt: option ; do
       ;;
     p) # pull updated containers
       pull_containers
+      exit 0
       ;;
     t) # Pass gridappsd tag to docker-compose
       GRIDAPPSD_TAG=":$OPTARG"
@@ -104,6 +104,7 @@ while getopts dpt: option ; do
 done
 shift `expr $OPTIND - 1`
 
+[ -f '.env' ] && exists=1
 create_env
 
 # Mysql
@@ -144,6 +145,10 @@ echo " "
 echo "Getting blazegraph status"
 status=$(curl -s --head -w %{http_code} "$url_blazegraph" -o /dev/null)
 debug_msg "blazegraph curl status: $status"
+
+if [ $GRIDAPPSD_TAG  == ':dev' ]; then
+  pull_containers
+fi
 
 echo " "
 echo "Starting the docker containers"
