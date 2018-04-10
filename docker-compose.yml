@@ -98,7 +98,6 @@ services:
       - PROVEN_T3DIR=/proven
     volumes:
       - ./gridappsd/proven:/proven
-    command: ["--deploy", "/opt/payara/deployments/proven.war"]
     user: root
 
   influxdb:
