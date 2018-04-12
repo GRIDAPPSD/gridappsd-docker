@@ -2,14 +2,9 @@ version: '2'
 
 services:
   blazegraph:
-    image: lyrasis/blazegraph:2.1.4
+    image: gridappsd/blazegraph${GRIDAPPSD_TAG}
     ports:
       - 8889:8080
-
-    volumes:
-      # Should match what is in run-example.sh
-      - ./gridappsd/blazegraph/data:/data
-      - ./conf/rwstore.properties:/RWStore.properties
 
   redis:
     image: redis:3.2.11-alpine
@@ -84,7 +79,7 @@ services:
       - redis
 
   proven:
-    image: gridappsd/proven
+    image: gridappsd/proven${GRIDAPPSD_TAG}
     ports:
       - 18080:8080
     environment:
