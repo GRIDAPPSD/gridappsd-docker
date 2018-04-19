@@ -43,7 +43,7 @@ Now we are inside the executing container
 root@737c30c82df7:/gridappsd# ./run-docker.sh
 
 ```
-Open your browser to http://localhost:8080/ieee8500
+Open your browser to http://localhost:8080/
 
 Click the triangle in the top right corner to have a simulation run.
 
