@@ -184,10 +184,12 @@ http_status_container 'viz'
 echo " "
 echo "Containers are running"
 
+gridappsd_container=`docker-compose ps | awk '{print $1}' | grep '_gridappsd_'`
+
 echo " "
 echo "Connecting to the gridappsd container"
-echo "docker exec -it gridappsddocker_gridappsd_1 /bin/bash"
+echo "docker exec -it $gridappsd_container /bin/bash"
 echo " "
-docker exec -it gridappsddocker_gridappsd_1 /bin/bash
+docker exec -it $gridappsd_container /bin/bash
 
 exit 0
