@@ -184,7 +184,7 @@ http_status_container 'viz'
 echo " "
 echo "Containers are running"
 
-gridappsd_container=`docker-compose ps | awk '{print $1}' | grep '_gridappsd_'`
+gridappsd_container=`docker inspect  --format="{{.Name}}" \`docker-compose ps -q gridappsd\` | sed 's:/::'`
 
 echo " "
 echo "Connecting to the gridappsd container"
