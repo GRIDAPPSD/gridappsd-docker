@@ -69,7 +69,7 @@ services:
 # repository.  Once uncommenting the three lines below the sample_app will be available in the
 # container
 #
-#    volumes:
+    volumes:
       - ~/git/gridappsd-sample-app/sample_app:/gridappsd/applications/sample_app
       - ~/git/gridappsd-sample-app/sample_app/sample_app.config:/gridappsd/applications/sample_app.config
       - ~/git/gridappsd-state-estimator/state-estimator:/gridappsd/services/state-estimator
