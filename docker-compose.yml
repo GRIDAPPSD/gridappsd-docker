@@ -30,7 +30,7 @@ services:
       - ./dumps/gridappsd_mysql_dump.sql:/docker-entrypoint-initdb.d/schema.sql:ro
 
   viz:
-    image: gridappsd/viz${GRIDAPPSD_TAG}
+    image: gridappsd/viz
     ports:
       - 8080:8082
 
@@ -38,7 +38,7 @@ services:
       - gridappsd
 
   gridappsd:
-    image: gridappsd/gridappsd${GRIDAPPSD_TAG}
+    image: gridappsd/gridappsd
     ports:
       # Each of the following are port mappings from the host into the
       # container.  The first three are used by GridAPPS-D for the different
@@ -70,8 +70,10 @@ services:
 # container
 #
 #    volumes:
-#      - ~/git/gridappsd-sample-app/sample_app:/gridappsd/applications/sample_app
-#      - ~/git/gridappsd-sample-app/sample_app/sample_app.config:/gridappsd/applications/sample_app.config
+      - ~/git/gridappsd-sample-app/sample_app:/gridappsd/applications/sample_app
+      - ~/git/gridappsd-sample-app/sample_app/sample_app.config:/gridappsd/applications/sample_app.config
+      - ~/git/gridappsd-state-estimator/state-estimator:/gridappsd/services/state-estimator
+      - ~/git/gridappsd-state-estimator/state-estimator/state-estimator.config:/gridappsd/services/state-estimator.config
 
     depends_on:
       - mysql
