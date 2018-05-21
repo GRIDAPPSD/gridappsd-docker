@@ -29,6 +29,7 @@ create_env () {
     echo "Create the docker env file with the tag variables"
     # Create the docker env file with the tag variables
     cat > .env << EOF
+# This file is auto generated, please change the tag with the run.sh -t option
 GRIDAPPSD_TAG=$GRIDAPPSD_TAG
 EOF
   fi
@@ -86,7 +87,7 @@ data_dir="dumps"
 debug=0
 exists=0
 # set the default tag for the gridappsd and viz containers
-GRIDAPPSD_TAG=':dev'
+GRIDAPPSD_TAG=':v1.0'
 
 # parse options
 while getopts dpt: option ; do

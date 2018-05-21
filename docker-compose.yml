@@ -14,7 +14,6 @@ services:
     volumes:
       - ./gridappsd/redis/data:/data
     entrypoint: redis-server --appendonly yes
-    restart: always
 
   mysql:
     image: mysql/mysql-server:5.7
