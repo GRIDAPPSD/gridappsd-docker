@@ -10,7 +10,7 @@ usage () {
 
 create_env () {
   if [ -f '.env' ]; then
-    prevtag=`cat .env | sed 's/GRIDAPPSD_TAG=://'`
+    prevtag=`grep GRIDAPPSD_TAG .env | sed 's/GRIDAPPSD_TAG=://'`
     currtag=`echo $GRIDAPPSD_TAG | sed 's/://'`
     if [ "$prevtag" != "$currtag" ]; then
       echo " "
