@@ -78,7 +78,7 @@ services:
       - redis
 
   proven:
-    image: gridappsd/proven${GRIDAPPSD_TAG}
+    image: gridappsd/proven:18062114
     ports:
       - 18080:8080
     environment:
