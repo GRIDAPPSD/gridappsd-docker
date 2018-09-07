@@ -2,7 +2,7 @@ version: '2'
 
 services:
   blazegraph:
-    image: gridappsd/blazegraph:dev
+    image: gridappsd/blazegraph${GRIDAPPSD_TAG}
     ports:
       - 8889:8080
 
@@ -78,7 +78,7 @@ services:
       - redis
 
   proven:
-    image: gridappsd/proven:18062114
+    image: pnnl/proven:latest
     ports:
       - 18080:8080
     environment:
@@ -101,9 +101,6 @@ services:
       - PROVEN_IDB_USERNAME=root
       - PROVEN_IDB_PASSWORD=root
       - PROVEN_T3DIR=/proven
-    volumes:
-      - ./gridappsd/proven:/proven
-    user: root
 
   influxdb:
     image: influxdb
