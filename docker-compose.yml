@@ -2,7 +2,7 @@ version: '2'
 
 services:
   blazegraph:
-    image: gridappsd/blazegraph:dev
+    image: gridappsd/blazegraph${GRIDAPPSD_TAG}
     ports:
       - 8889:8080
 
@@ -68,9 +68,9 @@ services:
 # repository.  Once uncommenting the three lines below the sample_app will be available in the
 # container
 #
-#    volumes:
-#      - ~/git/gridappsd-sample-app/sample_app:/gridappsd/applications/sample_app
-#      - ~/git/gridappsd-sample-app/sample_app/sample_app.config:/gridappsd/applications/sample_app.config
+    volumes:
+      - ~/git/gridappsd-sample-app/sample_app:/gridappsd/applications/sample_app
+      - ~/git/gridappsd-sample-app/sample_app/sample_app.config:/gridappsd/applications/sample_app.config
 
     depends_on:
       - mysql
@@ -78,7 +78,7 @@ services:
       - redis
 
   proven:
-    image: gridappsd/proven:18062114
+    image: pnnl/proven:latest
     ports:
       - 18080:8080
     environment:
@@ -101,9 +101,6 @@ services:
       - PROVEN_IDB_USERNAME=root
       - PROVEN_IDB_PASSWORD=root
       - PROVEN_T3DIR=/proven
-    volumes:
-      - ./gridappsd/proven:/proven
-    user: root
 
   influxdb:
     image: influxdb
