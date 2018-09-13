@@ -1,1 +1,7 @@
-docker exec -it gridappsddocker_gridappsd_1 bash
+
+if [ $# == 1 ]; then
+  docker exec -u $1 -it gridappsddocker_gridappsd_1 bash
+else
+  docker exec -it gridappsddocker_gridappsd_1 bash
+fi
+
