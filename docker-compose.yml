@@ -125,9 +125,7 @@ services:
       - PROVEN_T3DIR=/proven
 
   influxdb:
-    image: influxdb
-    volumes:
-      - ./gridappsd/influxdb:/var/lib/influxdb
+    image: gridappsd/influxdb${GRIDAPPSD_TAG}
     environment:
       INFLUXDB_DB: "proven"
     ports:
