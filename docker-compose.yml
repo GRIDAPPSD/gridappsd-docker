@@ -100,7 +100,7 @@ services:
       - redis
 
   proven:
-    image: pnnl/proven:latest
+    image: gridappsd/proven:develop
     ports:
       - 18080:8080
     environment:
