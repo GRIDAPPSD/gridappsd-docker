@@ -87,7 +87,7 @@ data_dir="dumps"
 debug=0
 exists=0
 # set the default tag for the gridappsd and viz containers
-GRIDAPPSD_TAG=':v1.0'
+GRIDAPPSD_TAG=':develop'
 
 # parse options
 while getopts dpt: option ; do
@@ -136,7 +136,7 @@ echo "Getting blazegraph status"
 status=$(curl -s --head -w %{http_code} "$url_blazegraph" -o /dev/null)
 debug_msg "blazegraph curl status: $status"
 
-if [ $GRIDAPPSD_TAG  == ':dev' ]; then
+if [ $GRIDAPPSD_TAG  == ':develop' ]; then
   pull_containers
 fi
 
