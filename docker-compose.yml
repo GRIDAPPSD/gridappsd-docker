@@ -2,7 +2,7 @@ version: '2'
 
 services:
   sample_app:
-    image: gridappsd/sample_app
+    image: gridappsd/sample_app${GRIDAPPSD_TAG}
     environment:
       GRIDAPPSD_URI: tcp://gridappsd:61613
   #    GRIDAPPSD_USER: system
@@ -23,6 +23,7 @@ services:
       # reflected inside the container.
       #
       #- $HOME/git/gridappsd-sample-app/:/usr/src/gridappsd-sample
+      
   blazegraph:
     image: gridappsd/blazegraph${GRIDAPPSD_TAG}
     ports:
@@ -100,7 +101,7 @@ services:
       - redis
 
   proven:
-    image: gridappsd/proven:develop
+    image: gridappsd/proven${GRIDAPPSD_TAG}
     ports:
       - 18080:8080
     environment:
