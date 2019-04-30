@@ -62,7 +62,7 @@ http_status_container() {
   debug_msg "$cnt $url"
   status="0"
   count=0
-  maxcount=10
+  maxcount=30
   while [ $status -ne "200" -a $count -lt $maxcount ]
   do
     status=$(curl -s --head -w %{http_code} "$url" -o /dev/null)
