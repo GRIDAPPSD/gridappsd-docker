@@ -2,7 +2,7 @@ version: '2'
 
 services:
   sample_app:
-    image: gridappsd/sample_app${GRIDAPPSD_TAG}
+    image: gridappsd/sample_app
     environment:
       GRIDAPPSD_URI: tcp://gridappsd:61613
   #    GRIDAPPSD_USER: system
@@ -94,7 +94,8 @@ services:
 #    volumes:
 #      - ~/git/gridappsd-sample-app/sample_app:/gridappsd/applications/sample_app
 #      - ~/git/gridappsd-sample-app/sample_app/sample_app.config:/gridappsd/applications/sample_app.config
-
+#    volumes:
+#      - ./debug-scripts:/gridappsd/debug-scripts
     depends_on:
       - mysql
       - blazegraph
