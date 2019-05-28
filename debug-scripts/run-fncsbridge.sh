@@ -38,8 +38,8 @@ fi
 
 export FNCS_LOG_LEVEL=DEBUG4
 export FNCS_LOG_FILE="/gridappsd/debug-scripts/output/${sim_id}_fncs_log.txt"
-export FNCS_BROKER="tcp://*:${port_num}"
-echo $FNCS_BROKER
+#export FNCS_BROKER="tcp://*:${port_num}"
+#echo $FNCS_BROKER
 cd /gridappsd/services/fncsgossbridge/service
 python fncs_goss_bridge.py ${sim_id} "tcp://127.0.0.1:${port_num}" "/tmp/gridappsd_tmp/${sim_id}/" "{\"simulation_config\":{\"run_realtime\":${run_realtime},\"duration\":${duration}}}" 2>&1 | tee "/gridappsd/debug-scripts/output/fncsgossbridge_out.txt"
 
