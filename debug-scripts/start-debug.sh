@@ -23,3 +23,6 @@ x-terminal-emulator -e "docker exec -it gridappsddocker_gridappsd_1 /gridappsd/d
 sleep 2
 echo "starting fncsbridge"
 x-terminal-emulator -e "docker exec -it gridappsddocker_gridappsd_1 /gridappsd/debug-scripts/run-fncsbridge.sh ${sim_id} ${port_num} ${run_realtime} ${duration}"
+sleep 2
+echo "starting goss_sender"
+x-terminal-emulator -e "docker exec -it gridappsddocker_gridappsd_1 /gridappsd/debug-scripts/run-goss_sender.sh ${sim_id}"

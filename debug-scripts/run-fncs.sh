@@ -29,7 +29,7 @@ if [[ ! -d ${gridappsd_tmp} ]]; then
     exit 1;
 fi
 
-export FNCS_LOG_LEVEL=DEBUG4
+export FNCS_LOG_LEVEL=DEBUG1
 export FNCS_LOG_FILE="./${sim_id}_fncs_log.txt"
 export FNCS_BROKER="tcp://*:${port_num}"
 echo "Running fncs broker here: $FNCS_BROKER"
