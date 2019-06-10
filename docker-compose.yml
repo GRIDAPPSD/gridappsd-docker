@@ -94,7 +94,8 @@ services:
 #    volumes:
 #      - ~/git/gridappsd-sample-app/sample_app:/gridappsd/applications/sample_app
 #      - ~/git/gridappsd-sample-app/sample_app/sample_app.config:/gridappsd/applications/sample_app.config
-
+#    volumes:
+#      - ./debug-scripts:/gridappsd/debug-scripts
     depends_on:
       - mysql
       - blazegraph
