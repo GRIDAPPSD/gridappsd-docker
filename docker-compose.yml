@@ -2,7 +2,7 @@ version: '2'
 
 services:
   sample_app:
-    image: gridappsd/sample_app
+    image: gridappsd/sample_app${GRIDAPPSD_TAG}
     environment:
       GRIDAPPSD_URI: tcp://gridappsd:61613
   #    GRIDAPPSD_USER: system
