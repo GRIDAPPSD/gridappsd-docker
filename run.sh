@@ -136,9 +136,9 @@ echo "Getting blazegraph status"
 status=$(curl -s --head -w %{http_code} "$url_blazegraph" -o /dev/null)
 debug_msg "blazegraph curl status: $status"
 
-if [ $GRIDAPPSD_TAG  == ':develop' ]; then
-  pull_containers
-fi
+#if [ $GRIDAPPSD_TAG  == ':develop' ]; then
+pull_containers
+#fi
 
 echo " "
 echo "Starting the docker containers"
