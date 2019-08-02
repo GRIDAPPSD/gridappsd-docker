@@ -1,6 +1,10 @@
 version: '2'
 
 services:
+#  pyvvo_db:
+#    image: gridappsd/pyvvo-mysql:latest
+#    ports:
+#        - "3307:3306"
   sample_app:
     image: gridappsd/sample_app${GRIDAPPSD_TAG}
     environment:
@@ -9,20 +13,20 @@ services:
   #    GRIDAPPSD_PASS: manager
     depends_on:
       - gridappsd 
-    #volumes:
+    volumes:
       # Change upto the : where you have your git repository on your
       # computer.  The : delinates between the host (your computer) and
       # the container (inside of the container)  
       #
       # In order for the app to be registered with gridappsd a configuration
       # file must be mounted or copied to /appconfig
-      # - $HOME/git/gridappsd-sample-app/sample_app.config:/appconfig
+      - $HOME/git/gridappsd-sample-app/sample_app.config:/appconfig
 
       # When debugging apps it is helpful to mount the application over the
       # top of where it normally be ran so that changes on the host are immediately
       # reflected inside the container.
       #
-      #- $HOME/git/gridappsd-sample-app/:/usr/src/gridappsd-sample
+      - $HOME/git/gridappsd-sample-app/:/usr/src/gridappsd-sample
       
   blazegraph:
     image: gridappsd/blazegraph${GRIDAPPSD_TAG}
@@ -91,9 +95,9 @@ services:
 # repository.  Once uncommenting the three lines below the sample_app will be available in the
 # container
 #
-#    volumes:
-#      - ~/git/gridappsd-sample-app/sample_app:/gridappsd/applications/sample_app
-#      - ~/git/gridappsd-sample-app/sample_app/sample_app.config:/gridappsd/applications/sample_app.config
+    volumes:
+      - ~/git/gridappsd-sensor-simulator:/gridappsd/services/gridappsd-sensor-simulator
+      - ~/git/gridappsd-sensor-simulator/sensor_simulator.config:/gridappsd/services/sensor_simulator.config
 #    volumes:
 #      - ./debug-scripts:/gridappsd/debug-scripts
     depends_on:
