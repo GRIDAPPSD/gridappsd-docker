@@ -5,28 +5,64 @@ services:
 #    image: gridappsd/pyvvo-mysql:latest
 #    ports:
 #        - "3307:3306"
-  sample_app:
-    image: gridappsd/sample_app${GRIDAPPSD_TAG}
-    environment:
-      GRIDAPPSD_URI: tcp://gridappsd:61613
+#  sample_app:
+#    image: gridappsd/sample_app${GRIDAPPSD_TAG}
+#    environment:
+#      GRIDAPPSD_URI: tcp://gridappsd:61613
   #    GRIDAPPSD_USER: system
   #    GRIDAPPSD_PASS: manager
-    depends_on:
-      - gridappsd 
-    volumes:
+#    depends_on:
+#      - gridappsd 
+#    volumes:
       # Change upto the : where you have your git repository on your
       # computer.  The : delinates between the host (your computer) and
       # the container (inside of the container)  
       #
       # In order for the app to be registered with gridappsd a configuration
       # file must be mounted or copied to /appconfig
-      - $HOME/git/gridappsd-sample-app/sample_app.config:/appconfig
+#      - $HOME/git/gridappsd-sample-app/sample_app.config:/appconfig
 
       # When debugging apps it is helpful to mount the application over the
       # top of where it normally be ran so that changes on the host are immediately
       # reflected inside the container.
       #
-      - $HOME/git/gridappsd-sample-app/:/usr/src/gridappsd-sample
+#      - $HOME/git/gridappsd-sample-app/:/usr/src/gridappsd-sample
+  pyvvo:
+    image: gridappsd/pyvvo:app_config
+    environment:
+      # PyVVO uses a flag to determine if it's being managed by the platform or not.
+      platform: "1"
+      # PyVVO needs to know how to access the database.
+      DB_HOST:  "db"
+      DB_USER:  "pyvvo"
+      DB_PASS:  "pyvvo"
+      DB_DB:    "pyvvo"
+      DB_PORT:  "3306"
+      # So that our imports work we need to patch the PYTHONPATH
+      PYTHONPATH: ":/pyvvo/pyvvo"
+      # The following is/are needed for app-container-base which PyVVO is built on.
+      GRIDAPPSD_URI: tcp://gridappsd:61613
+      # The following are defined in the Dockerfile for gridappsd-python, so this 
+      # is redundent.
+      GRIDAPPSD_USER: system
+      GRIDAPPSD_PASS: manager
+    depends_on:
+      - gridappsd
+      - pyvvo-db
+    volumes:
+      # Map the application configuration.
+      - $HOME/git/pyvvo/pyvvo/platform_config.json:/appconfig
+  pyvvo-db:
+    image: gridappsd/pyvvo-mysql:latest
+    volumes:
+      - db_volume:/var/lib/mysql
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+      MYSQL_DATABASE: 'pyvvo'
+      MYSQL_USER: 'pyvvo'
+      MYSQL_PASSWORD: 'pyvvo'
+    expose:
+      - "3306"
       
   blazegraph:
     image: gridappsd/blazegraph${GRIDAPPSD_TAG}
@@ -137,3 +173,5 @@ services:
     ports:
       - 8086:8086
 
+volumes:
+  db_volume: {}
