@@ -33,7 +33,7 @@ services:
       # PyVVO uses a flag to determine if it's being managed by the platform or not.
       platform: "1"
       # PyVVO needs to know how to access the database.
-      DB_HOST:  "db"
+      DB_HOST:  "pyvvo-db"
       DB_USER:  "pyvvo"
       DB_PASS:  "pyvvo"
       DB_DB:    "pyvvo"
