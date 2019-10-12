@@ -28,7 +28,7 @@ services:
       #
 #      - $HOME/git/gridappsd-sample-app/:/usr/src/gridappsd-sample
   pyvvo:
-    image: gridappsd/pyvvo:app_config
+    image: gridappsd/pyvvo:latest
     environment:
       # PyVVO uses a flag to determine if it's being managed by the platform or not.
       platform: "1"
@@ -52,6 +52,9 @@ services:
     volumes:
       # Map the application configuration.
       - $HOME/git/pyvvo/pyvvo/platform_config.json:/appconfig
+      # Map the application code (to avoid having to rebuild while developing).
+      # This should not be present for "production"
+      - $HOME/git/pyvvo/pyvvo:/pyvvo/pyvvo/pyvvo
   pyvvo-db:
     image: gridappsd/pyvvo-mysql:latest
     volumes:
