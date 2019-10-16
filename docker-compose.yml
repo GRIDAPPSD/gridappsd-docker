@@ -28,7 +28,7 @@ services:
       #
 #      - $HOME/git/gridappsd-sample-app/:/usr/src/gridappsd-sample
   pyvvo:
-    image: gridappsd/pyvvo:latest
+    image: gridappsd/pyvvo:demo_2019_10_17
     environment:
       # PyVVO uses a flag to determine if it's being managed by the platform or not.
       platform: "1"
