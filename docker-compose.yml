@@ -134,9 +134,9 @@ services:
 # repository.  Once uncommenting the three lines below the sample_app will be available in the
 # container
 #
-    volumes:
-      - ~/git/gridappsd-sensor-simulator:/gridappsd/services/gridappsd-sensor-simulator
-      - ~/git/gridappsd-sensor-simulator/sensor_simulator.config:/gridappsd/services/sensor_simulator.config
+#    volumes:
+#      - ~/git/gridappsd-sensor-simulator:/gridappsd/services/gridappsd-sensor-simulator
+#      - ~/git/gridappsd-sensor-simulator/sensor_simulator.config:/gridappsd/services/sensor_simulator.config
 #    volumes:
 #      - ./debug-scripts:/gridappsd/debug-scripts
     depends_on:
