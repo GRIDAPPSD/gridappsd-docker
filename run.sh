@@ -46,7 +46,7 @@ debug_msg() {
 pull_containers() {
   echo " "
   echo "Pulling updated containers"
-  docker-compose pull
+  docker-compose pull --ignore-pull-failures
 }
 
 http_status_container() {
