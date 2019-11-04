@@ -56,7 +56,7 @@ services:
       # This should not be present for "production"
       - $HOME/git/pyvvo/pyvvo:/pyvvo/pyvvo/pyvvo
   pyvvo-db:
-    image: gridappsd/pyvvo-mysql:latest
+    image: gridappsd/pyvvo:mysql-latest
     volumes:
       - db_volume:/var/lib/mysql
     environment:
