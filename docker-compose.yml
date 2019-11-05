@@ -1,32 +1,6 @@
 version: '2'
 
 services:
-#  pyvvo_db:
-#    image: gridappsd/pyvvo-mysql:latest
-#    ports:
-#        - "3307:3306"
-#  sample_app:
-#    image: gridappsd/sample_app${GRIDAPPSD_TAG}
-#    environment:
-#      GRIDAPPSD_URI: tcp://gridappsd:61613
-  #    GRIDAPPSD_USER: system
-  #    GRIDAPPSD_PASS: manager
-#    depends_on:
-#      - gridappsd 
-#    volumes:
-      # Change upto the : where you have your git repository on your
-      # computer.  The : delinates between the host (your computer) and
-      # the container (inside of the container)  
-      #
-      # In order for the app to be registered with gridappsd a configuration
-      # file must be mounted or copied to /appconfig
-#      - $HOME/git/gridappsd-sample-app/sample_app.config:/appconfig
-
-      # When debugging apps it is helpful to mount the application over the
-      # top of where it normally be ran so that changes on the host are immediately
-      # reflected inside the container.
-      #
-#      - $HOME/git/gridappsd-sample-app/:/usr/src/gridappsd-sample
   pyvvo:
     image: gridappsd/pyvvo:latest
     environment:
@@ -50,11 +24,11 @@ services:
       - gridappsd
       - pyvvo-db
     volumes:
-      # Map the application configuration.
-      - $HOME/git/pyvvo/pyvvo/platform_config.json:/appconfig
+      # Map the main configuration file.
+      - $HOME/git/pyvvo/pyvvo/pyvvo_config.json:/pyvvo/pyvvo/pyvvo/pyvvo_config.json
       # Map the application code (to avoid having to rebuild while developing).
       # This should not be present for "production"
-      - $HOME/git/pyvvo/pyvvo:/pyvvo/pyvvo/pyvvo
+      # - $HOME/git/pyvvo/pyvvo:/pyvvo/pyvvo/pyvvo
   pyvvo-db:
     image: gridappsd/pyvvo:mysql-latest
     volumes:
