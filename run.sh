@@ -46,7 +46,7 @@ debug_msg() {
 pull_containers() {
   echo " "
   echo "Pulling updated containers"
-  docker-compose pull
+  docker-compose pull --ignore-pull-failures
 }
 
 http_status_container() {
@@ -87,7 +87,7 @@ data_dir="dumps"
 debug=0
 exists=0
 # set the default tag for the gridappsd and viz containers
-GRIDAPPSD_TAG=':v2019.09.0'
+GRIDAPPSD_TAG=':v2019.12.0'
 
 # parse options
 while getopts dpt: option ; do
