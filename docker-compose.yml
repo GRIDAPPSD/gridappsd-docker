@@ -93,9 +93,14 @@ services:
     working_dir: /gridappsd
     environment:
       - PATH=/gridappsd/bin:/gridappsd/lib:/gridappsd/services/fncsgossbridge/service:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
+      # X11 application support--use same display as host, typically ":0"
+      # - DISPLAY=${DISPLAY}
       # Debugging is only necessary if you intend to remote debug the GridAPPS-D process iself.
       # Turning this on will allow the user to remote debug the gridappsd server on port 8000.
       - DEBUG=1
+    # volumes:
+      # X11 application support--share X11 port with container host
+      # - /tmp/.X11-unix:/tmp/.X11-unix
 # The following allow applications to be mounted into the container so that
 # gridappsd can start them in the correct context.
 #
