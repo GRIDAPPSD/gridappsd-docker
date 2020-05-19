@@ -35,6 +35,25 @@ EOF
   fi
 }
 
+configure_viz () {
+  external_ip=$( curl -s ifconfig.me )
+
+  echo " "
+  echo "Configuring viz for $external_ip"
+
+  if [[ $external_ip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  cat > conf/viz.config << EOF
+{
+    "version": "remote$GRIDAPPSD_TAG",
+    "host": "$external_ip:61614"
+}
+EOF
+  else
+    echo "Error getting external ip address"
+    exit 1
+  fi
+}
+
 debug_msg() {
   msg=$1
   if [ $debug == 1 ]; then
@@ -46,7 +65,7 @@ debug_msg() {
 pull_containers() {
   echo " "
   echo "Pulling updated containers"
-  docker-compose pull --ignore-pull-failures
+#  docker-compose $compose_files pull --ignore-pull-failures
 }
 
 http_status_container() {
@@ -87,7 +106,11 @@ data_dir="dumps"
 debug=0
 exists=0
 # set the default tag for the gridappsd and viz containers
-GRIDAPPSD_TAG=':v2020.03.0'
+GRIDAPPSD_TAG=':develop'
+
+compose_files=$( ls -1 docker-compose.d/*yml 2>/dev/null | sed -e 's/^/-f /g' | tr '\n' ' ' )
+compose_files="-f docker-compose.yml $compose_files"
+echo "Compose files: $compose_files"
 
 # parse options
 while getopts dpt: option ; do
@@ -111,6 +134,7 @@ shift `expr $OPTIND - 1`
 
 [ -f '.env' ] && exists=1
 create_env
+configure_viz
 
 # Mysql
 [ ! -d "$data_dir" ] && mkdir "$data_dir"
@@ -144,7 +168,7 @@ echo " "
 echo "Starting the docker containers"
 echo " "
 echo " "
-docker-compose up -d
+docker-compose $compose_files up -d
 container_status=$?
 
 if [ $container_status -ne 0 ]; then
@@ -185,12 +209,14 @@ http_status_container 'viz'
 echo " "
 echo "Containers are running"
 
-gridappsd_container=`docker inspect  --format="{{.Name}}" \`docker-compose ps -q gridappsd\` | sed 's:/::'`
-
-echo " "
-echo "Connecting to the gridappsd container"
-echo "docker exec -it $gridappsd_container /bin/bash"
-echo " "
-docker exec -it $gridappsd_container /bin/bash
+if tty -s ; then
+  gridappsd_container=`docker inspect  --format="{{.Name}}" \`docker-compose $compose_files ps -q gridappsd\` | sed 's:/::'`
+  
+  echo " "
+  echo "Connecting to the gridappsd container"
+  echo "docker exec -it $gridappsd_container /bin/bash"
+  echo " "
+  docker exec -it $gridappsd_container /bin/bash
+fi
 
 exit 0

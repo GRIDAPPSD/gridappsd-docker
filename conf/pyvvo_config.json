@@ -1,0 +1,48 @@
+{
+  "database": {
+    "triplex_table": "triplex",
+    "substation_table": "substation",
+    "query_buffer_limit": 20000,
+    "max_connections": 100
+  },
+  "ga": {
+    "probabilities": {
+      "mutate_individual": 0.2,
+      "mutate_bit": 0.05,
+      "crossover": 0.7
+    },
+    "intervals": {
+      "sample": 5,
+      "minimum_timestep": 1,
+      "model_run": 60
+    },
+    "population_size": 28,
+    "generations": 3,
+    "top_fraction": 0.1,
+    "total_fraction": 0.5,
+    "tournament_fraction": 0.2,
+    "log_interval": 10,
+    "processes": 6,
+    "process_shutdown_timeout": 5
+  },
+  "limits": {
+    "voltage_high": 1.05,
+    "voltage_low": 0.95,
+    "power_factor_lag": 0.99,
+    "power_factor_lead": 0.99
+  },
+  "costs": {
+    "capacitor_switch": 0.1,
+    "regulator_tap": 0.5,
+    "energy": 0.08,
+    "voltage_violation_high": 2,
+    "voltage_violation_low": 2,
+    "power_factor_lag": 0.1,
+    "power_factor_lead": 0.1
+  },
+  "load_model": {
+    "averaging_interval": "15Min",
+    "window_size_days": 14,
+    "filtering_interval_minutes": 60
+  }
+}

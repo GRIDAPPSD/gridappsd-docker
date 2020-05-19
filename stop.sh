@@ -12,7 +12,7 @@ usage () {
 clean_up () {
   echo " "
   echo "Removing docker containers"
-  docker-compose down
+  docker-compose $compose_files down
 
   # remove the dump files if -c option
   if [ $cleanup -eq 1 ]; then
@@ -71,6 +71,10 @@ data_dir="dumps"
 cleanup=0
 database_dirs="gridappsdmysql gridappsd"
 
+compose_files=$( ls -1 docker-compose.d/*yml 2>/dev/null | sed -e 's/^/-f /g' | tr '\n' ' ' )
+compose_files="-f docker-compose.yml $compose_files"
+echo "Compose files: $compose_files"
+
 # parse options
 while getopts cw option ; do
   case $option in
@@ -89,7 +93,7 @@ shift `expr $OPTIND - 1`
 
 echo " "
 echo "Shutting down the docker containers"
-docker-compose stop
+docker-compose $compose_files stop
 
 if [ $cleanup -gt 0 ]; then
   clean_up

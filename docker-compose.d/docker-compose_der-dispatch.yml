@@ -1,0 +1,12 @@
+version: '2'
+
+services:
+  derdispatch:
+    image: gridappsd/der-dispatch-app
+    ports:
+      - 9001:9001
+    environment:
+      GRIDAPPSD_URI: tcp://gridappsd:61613
+    depends_on:
+      - gridappsd
+

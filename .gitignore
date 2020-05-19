@@ -4,3 +4,4 @@ gridappsdmysql
 applications
 services
 .env
+conf/viz.config
