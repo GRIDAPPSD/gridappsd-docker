@@ -36,10 +36,12 @@ EOF
 }
 
 configure_viz () {
-  external_ip=$( curl -s ifconfig.me )
+  #external_ip=$( curl -s ifconfig.me )
+  external_ip=$( ifconfig eth0 | grep 'inet ' | awk '{print $2}' )
 
   echo " "
   echo "Configuring viz for $external_ip"
+  url_viz="http://${external_ip}:8080/"
 
   if [[ $external_ip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   cat > conf/viz.config << EOF
@@ -208,6 +210,8 @@ http_status_container 'viz'
 
 echo " "
 echo "Containers are running"
+
+echo "$url_viz"
 
 if tty -s ; then
   gridappsd_container=`docker inspect  --format="{{.Name}}" \`docker-compose $compose_files ps -q gridappsd\` | sed 's:/::'`
