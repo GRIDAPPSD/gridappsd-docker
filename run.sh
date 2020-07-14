@@ -36,8 +36,8 @@ EOF
 }
 
 configure_viz () {
-  #external_ip=$( curl -s ifconfig.me )
-  external_ip=$( ifconfig eth0 | grep 'inet ' | awk '{print $2}' )
+  external_ip=$( curl -s ifconfig.me )
+  #external_ip=$( ifconfig eth0 | grep 'inet ' | awk '{print $2}' )
 
   echo " "
   echo "Configuring viz for $external_ip"
