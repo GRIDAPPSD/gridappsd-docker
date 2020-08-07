@@ -58,7 +58,7 @@ services:
     depends_on:
       - gridappsd
     volumes:
-      - ./conf/viz.config:/gridappsd/viz/config.json
+    - ./conf/viz.config:/gridappsd/viz/assets/config.json
 
   gridappsd:
     image: gridappsd/gridappsd${GRIDAPPSD_TAG}
