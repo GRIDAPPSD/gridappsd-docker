@@ -39,17 +39,21 @@ services:
     entrypoint: redis-server --appendonly yes
 
   mysql:
-    image: mysql/mysql-server:5.7
+    image: gridappsd/gridappsd-mysql:wsl1  
+    #mysql/mysql-server:5.7
     ports:
       - 3306:3306
 
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      #MYSQL_ALLOW_EMPTY_PASSWORD: "yes"
       MYSQL_PORT: 3306
 
-    volumes:
-      - ./gridappsdmysql:/var/lib/mysql
-      - ./dumps/gridappsd_mysql_dump.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+      #volumes:
+      #- /mnt/c/data/gridappsd-docker/data:/var/lib/mysql 
+              #./gridappsdmysql:/var/lib/mysql
+              #- /mnt/c/data/gridappsd-docker/dumps:/docker-entrypoint-initdb.d
+        #./dumps/gridappsd_mysql_dump.sql:/docker-entrypoint-initdb.d/schema.sql:ro
 
   viz:
     image: gridappsd/viz${GRIDAPPSD_TAG}
