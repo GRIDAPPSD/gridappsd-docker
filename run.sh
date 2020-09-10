@@ -87,8 +87,7 @@ data_dir="dumps"
 debug=0
 exists=0
 # set the default tag for the gridappsd and viz containers
-
-GRIDAPPSD_TAG=':v2020.07.0'
+GRIDAPPSD_TAG=':v2020.08.0'
 
 # parse options
 while getopts dpt: option ; do
