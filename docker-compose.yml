@@ -68,6 +68,7 @@ services:
       - 61613:61613
       - 61614:61614
       - 61616:61616
+      - 20000-20020:20000-200020
       # Uncomment to allow debugging on this port
       - 8000:8000
       # Add debugging to your application via the following port
