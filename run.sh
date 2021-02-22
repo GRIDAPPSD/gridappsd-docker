@@ -89,6 +89,7 @@ exists=0
 # set the default tag for the gridappsd and viz containers
 GRIDAPPSD_TAG=':v2020.12.0'
 
+
 # parse options
 while getopts dpt: option ; do
   case $option in
