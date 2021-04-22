@@ -1,7 +1,7 @@
 
 if [ $# == 1 ]; then
-  docker exec -u $1 -it gridappsddocker_gridappsd_1 /bin/bash
+  docker exec -u $1 -it gridappsd /bin/bash
 else
-  docker exec -it gridappsddocker_gridappsd_1 /bin/bash
+  docker exec -it gridappsd /bin/bash
 fi
 
