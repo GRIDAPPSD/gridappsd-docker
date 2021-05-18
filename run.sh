@@ -81,7 +81,7 @@ http_status_container() {
 }
 
 url_viz="http://localhost:8080/"
-url_blazegraph="http://localhost:8889/bigdata/"
+url_blazegraph="http://localhost:8889/bigdata/namespace/kb/"
 mysql_file="gridappsd_mysql_dump.sql"
 data_dir="dumps"
 debug=0
