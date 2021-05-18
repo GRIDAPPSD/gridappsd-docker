@@ -62,7 +62,7 @@ http_status_container() {
   debug_msg "$cnt $url"
   status="0"
   count=0
-  maxcount=30
+  maxcount=60
   while [ $status -ne "200" -a $count -lt $maxcount ]
   do
     status=$(curl -s --head -w %{http_code} "$url" -o /dev/null)
@@ -81,13 +81,13 @@ http_status_container() {
 }
 
 url_viz="http://localhost:8080/"
-url_blazegraph="http://localhost:8889/bigdata/"
+url_blazegraph="http://localhost:8889/bigdata/namespace/kb/"
 mysql_file="gridappsd_mysql_dump.sql"
 data_dir="dumps"
 debug=0
 exists=0
 # set the default tag for the gridappsd and viz containers
-GRIDAPPSD_TAG=':v2021.03.0'
+GRIDAPPSD_TAG=':v2021.04.0'
 
 # parse options
 while getopts dpt: option ; do
