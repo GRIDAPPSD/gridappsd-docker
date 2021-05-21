@@ -40,12 +40,12 @@ The run.sh does the folowing
 
 Now we are inside the executing container
 ```
-root@737c30c82df7:/gridappsd# ./run-docker.sh
+root@737c30c82df7:/gridappsd# ./run-gridappsd.sh
 
 ```
 Open your browser to http://localhost:8080/
 
-Click the triangle in the top right corner to have a simulation run.
+[Using GridAPPS-D](https://gridappsd.readthedocs.io/en/master/using_gridappsd/index.html)
 
 ## Exiting the container and stopping the containers
 
@@ -64,9 +64,39 @@ exit
 
 Reconnect to the running gridappsd container
 ```
-user@foo>docker exec -it gridappsddocker_gridappsd_1 bash
+user@foo>docker exec -it gridappsd bash
 
 ```
 
 ## Next Steps
   - Add applications/services to the containers (see how <https://github.com/GRIDAPPSD/gridappsd-sample-app>)
+
+## Advanced Usage
+### Using GridAPPS-D on a remote system with a local browser
+
+On the system running gridappsd:
+
+In the gridappsd-docker directory create a viz.config file with the following content. Substitute the systems public ip address for localhost.
+
+```
+{
+"version": "remote",
+"host": "localhost:61614"
+}
+```
+
+Edit the docker-compose.yml and add the volume information under the viz: service.
+
+```
+volumes:
+- ./viz.config:/gridappsd/viz/assets/config.json
+```
+
+Stop and restart the platform.
+
+```
+./stop.sh -c
+./run.sh
+```
+
+Open your browser to http://remoteip:8080/
