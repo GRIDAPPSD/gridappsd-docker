@@ -84,6 +84,7 @@ services:
     working_dir: /gridappsd
     environment:
       - PATH=/gridappsd/bin:/gridappsd/lib:/gridappsd/services/fncsgossbridge/service:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
+      - LD_LIBRARY_PATH=/usr/local/lib64
       # X11 application support--use same display as host, typically ":0"
       # - DISPLAY=${DISPLAY}
       # Debugging is only necessary if you intend to remote debug the GridAPPS-D process iself.
