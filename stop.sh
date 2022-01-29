@@ -30,9 +30,9 @@ clean_up () {
       rmdir "$data_dir/$mysql_file" 
     fi
   
-    echo " "
     for blazegraph_file in $blazegraph_models; do
       if [ -f $data_dir/$blazegraph_file ] ; then
+        echo " "
         echo "Removing blazegraph import file $blazegraph_file"
         rm "$data_dir/$blazegraph_file"
       fi
@@ -49,6 +49,18 @@ clean_up () {
     echo " "
     echo "Removing the docker .env file"
     rm .env
+  fi
+
+  if [ -f conf/viz.config ] ; then
+    echo " "
+    echo "Removing the remote viz configuration file"
+    rm conf/viz.config
+  fi
+
+  if [ -f docker-compose.d/viz.yml ] ; then
+    echo " "
+    echo "Removing the remote viz compose file"
+    rm docker-compose.d/viz.yml
   fi
 
   for dbdir in $database_dirs; do

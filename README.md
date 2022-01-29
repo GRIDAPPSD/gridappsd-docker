@@ -74,29 +74,16 @@ user@foo>docker exec -it gridappsd bash
 ## Advanced Usage
 ### Using GridAPPS-D on a remote system with a local browser
 
-On the system running gridappsd:
-
-In the gridappsd-docker directory create a viz.config file with the following content. Substitute the systems public ip address for localhost.
-
+## Start the docker container services
 ```
-{
-"version": "remote",
-"host": "localhost:61614"
-}
+./run.sh -r
 ```
 
-Edit the docker-compose.yml and add the volume information under the viz: service.
+## Start gridappsd
+
+Now we are inside the executing container
+```
+root@737c30c82df7:/gridappsd# ./run-gridappsd.sh
 
 ```
-volumes:
-- ./viz.config:/gridappsd/viz/assets/config.json
-```
-
-Stop and restart the platform.
-
-```
-./stop.sh -c
-./run.sh
-```
-
 Open your browser to http://remoteip:8080/

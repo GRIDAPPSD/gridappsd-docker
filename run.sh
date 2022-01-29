@@ -1,9 +1,10 @@
 #!/bin/bash
 
 usage () {
-  /bin/echo "Usage:  $0 [-d] [-p] [-t tag]"
+  /bin/echo "Usage:  $0 [-d] [-p] [-r [ip address]] [-t tag]"
   /bin/echo "        -d      debug"
   /bin/echo "        -p      pull updated containers"
+  /bin/echo "        -r      use remote ip address for viz, will use external ip if no address is supplied"
   /bin/echo "        -t tag  specify gridappsd docker tag"
   exit 2
 }
@@ -36,22 +37,29 @@ EOF
 }
 
 configure_viz () {
-  external_ip=$( curl -s ifconfig.me )
-  #external_ip=$( ifconfig eth0 | grep 'inet ' | awk '{print $2}' )
-
   echo " "
-  echo "Configuring viz for $external_ip"
-  url_viz="http://${external_ip}:8080/"
+  echo "Configuring remote viz $remote_ip"
+  url_viz="http://${remote_ip}:8080/"
 
-  if [[ $external_ip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
+  if [[ $remote_ip =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]]; then
   cat > conf/viz.config << EOF
 {
     "version": "remote$GRIDAPPSD_TAG",
-    "host": "$external_ip:61614"
+    "host": "$remote_ip:61614"
 }
 EOF
+
+  cat > docker-compose.d/viz.yml << EOF
+version: '2'
+
+services:
+  viz:
+    volumes:
+    - ./conf/viz.config:/gridappsd/viz/assets/config.json
+EOF
+
   else
-    echo "Error getting external ip address"
+    echo "Error getting remote ip address"
     exit 1
   fi
 }
@@ -67,7 +75,7 @@ debug_msg() {
 pull_containers() {
   echo " "
   echo "Pulling updated containers"
-#  docker-compose $compose_files pull --ignore-pull-failures
+  docker-compose $compose_files pull --ignore-pull-failures
 }
 
 http_status_container() {
@@ -107,15 +115,12 @@ mysql_file="gridappsd_mysql_dump.sql"
 data_dir="dumps"
 debug=0
 exists=0
+remote_ip=''
 # set the default tag for the gridappsd and viz containers
 GRIDAPPSD_TAG=':develop'
 
-compose_files=$( ls -1 docker-compose.d/*yml 2>/dev/null | sed -e 's/^/-f /g' | tr '\n' ' ' )
-compose_files="-f docker-compose.yml $compose_files"
-echo "Compose files: $compose_files"
-
 # parse options
-while getopts dpt: option ; do
+while getopts dprt: option ; do
   case $option in
     d) # enable debug output
       debug=1
@@ -123,6 +128,15 @@ while getopts dpt: option ; do
     p) # pull updated containers
       pull_containers
       exit 0
+      ;;
+    r) # Remote ip address
+      eval nextopt=\${$OPTIND}
+      if [[ -n $nextopt && $nextopt != -* ]]; then
+        OPTIND=$((OPTIND +1))
+        remote_ip="$nextopt"
+      else
+        remote_ip=$( curl -s ifconfig.me )
+      fi
       ;;
     t) # Pass gridappsd tag to docker-compose
       GRIDAPPSD_TAG=":$OPTARG"
@@ -136,7 +150,12 @@ shift `expr $OPTIND - 1`
 
 [ -f '.env' ] && exists=1
 create_env
-configure_viz
+[ ! -z "$remote_ip" ] && configure_viz
+
+compose_files=$( ls -1 docker-compose.d/*yml 2>/dev/null | sed -e 's/^/-f /g' | tr '\n' ' ' )
+compose_files="-f docker-compose.yml $compose_files"
+echo "Compose files: $compose_files"
+
 
 # Mysql
 [ ! -d "$data_dir" ] && mkdir "$data_dir"
