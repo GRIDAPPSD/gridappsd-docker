@@ -52,7 +52,7 @@ services:
       MYSQL_PORT: 3306
 
     volumes:
-      - ./gridappsdmysql:/var/lib/mysql
+      - ./gridappsd/mysql:/var/lib/mysql
       - ./dumps/gridappsd_mysql_dump.sql:/docker-entrypoint-initdb.d/schema.sql:ro
 
   viz:
@@ -60,7 +60,6 @@ services:
     container_name: viz
     ports:
       - 8080:8082
-
     depends_on:
       - gridappsd
 

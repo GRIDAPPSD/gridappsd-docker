@@ -12,7 +12,7 @@ usage () {
 clean_up () {
   echo " "
   echo "Removing docker containers"
-  docker-compose down
+  docker-compose $compose_files down
 
   # remove the dump files if -c option
   if [ $cleanup -eq 1 ]; then
@@ -30,9 +30,9 @@ clean_up () {
       rmdir "$data_dir/$mysql_file" 
     fi
   
-    echo " "
     for blazegraph_file in $blazegraph_models; do
       if [ -f $data_dir/$blazegraph_file ] ; then
+        echo " "
         echo "Removing blazegraph import file $blazegraph_file"
         rm "$data_dir/$blazegraph_file"
       fi
@@ -49,6 +49,18 @@ clean_up () {
     echo " "
     echo "Removing the docker .env file"
     rm .env
+  fi
+
+  if [ -f conf/viz.config ] ; then
+    echo " "
+    echo "Removing the remote viz configuration file"
+    rm conf/viz.config
+  fi
+
+  if [ -f docker-compose.d/viz.yml ] ; then
+    echo " "
+    echo "Removing the remote viz compose file"
+    rm docker-compose.d/viz.yml
   fi
 
   for dbdir in $database_dirs; do
@@ -71,6 +83,10 @@ data_dir="dumps"
 cleanup=0
 database_dirs="gridappsdmysql gridappsd"
 
+compose_files=$( ls -1 docker-compose.d/*yml 2>/dev/null | sed -e 's/^/-f /g' | tr '\n' ' ' )
+compose_files="-f docker-compose.yml $compose_files"
+echo "Compose files: $compose_files"
+
 # parse options
 while getopts cw option ; do
   case $option in
@@ -89,7 +105,7 @@ shift `expr $OPTIND - 1`
 
 echo " "
 echo "Shutting down the docker containers"
-docker-compose stop
+docker-compose $compose_files stop
 
 if [ $cleanup -gt 0 ]; then
   clean_up

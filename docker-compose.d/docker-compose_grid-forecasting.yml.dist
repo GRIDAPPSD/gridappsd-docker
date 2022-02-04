@@ -1,0 +1,13 @@
+version: '2'
+
+services:
+  grid_forecasting:
+    image: gridappsd/grid-forecasting-app
+    ports:
+      - 9003:9003
+    environment:
+      GRIDAPPSD_URI: tcp://gridappsd:61613
+    depends_on:
+      - gridappsd
+    #volumes:
+      #- /home/martin/gridappsd-docker/Grid-Forecasting-Public:/usr/src/gridappsd-grid-forecasting

@@ -1,0 +1,11 @@
+version: '2'
+
+services:
+  solar_forecast:
+    image: gridappsd/solar-forecast-app
+    ports:
+      - 9002:9002
+    environment:
+      GRIDAPPSD_URI: tcp://gridappsd:61613
+    depends_on:
+      - gridappsd

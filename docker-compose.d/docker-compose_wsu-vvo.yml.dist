@@ -1,0 +1,7 @@
+version: '2'
+
+services:
+  wsu_vvo:
+    image: gridappsd/wsu-vvo-app
+    depends_on:
+      - gridappsd
