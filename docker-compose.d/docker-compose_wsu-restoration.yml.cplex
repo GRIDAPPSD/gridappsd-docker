@@ -1,0 +1,11 @@
+version: '2'
+
+services:
+  wsu_restoration:
+    image: gridappsd/wsu-restoration-app
+    volumes:
+      - /opt/ibm/ILOG/CPLEX_Studio1261/:/opt/ibm/ILOG/CPLEX_Studio1261/
+    environment:
+      GRIDAPPSD_URI: tcp://gridappsd:61613
+    depends_on: 
+      - gridappsd    

@@ -1,0 +1,46 @@
+version: '2'
+
+services:
+  pyvvo:
+    image: gridappsd/pyvvo:latest
+    environment:
+      # PyVVO uses a flag to determine if it's being managed by the platform or not.
+      platform: "1"
+      # PyVVO needs to know how to access the database.
+      DB_HOST:  "pyvvo-db"
+      DB_USER:  "pyvvo"
+      DB_PASS:  "pyvvo"
+      DB_DB:    "pyvvo"
+      DB_PORT:  "3306"
+      # So that our imports work we need to patch the PYTHONPATH
+      PYTHONPATH: ":/pyvvo/pyvvo"
+      # The following is/are needed for app-container-base which PyVVO is built on.
+      GRIDAPPSD_URI: tcp://gridappsd:61613
+      # The following are defined in the Dockerfile for gridappsd-python, so this 
+      # is redundent.
+      GRIDAPPSD_USER: system
+      GRIDAPPSD_PASS: manager
+    depends_on:
+      - gridappsd
+      - pyvvo-db
+    volumes:
+      # Map the main configuration file.
+      - ./conf/pyvvo_config.json:/pyvvo/pyvvo/pyvvo/pyvvo_config.json
+      # Map the application code (to avoid having to rebuild while developing).
+      # This should not be present for "production"
+      # - /home/martin/git/pyvvo/pyvvo:/pyvvo/pyvvo/pyvvo
+
+  pyvvo-db:
+    image: gridappsd/pyvvo:mysql-latest
+    volumes:
+      - db_volume:/var/lib/mysql
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: 'yes'
+      MYSQL_DATABASE: 'pyvvo'
+      MYSQL_USER: 'pyvvo'
+      MYSQL_PASSWORD: 'pyvvo'
+    expose:
+      - "3306"
+
+volumes:
+  db_volume: {}
