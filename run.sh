@@ -117,7 +117,7 @@ debug=0
 exists=0
 remote_ip=''
 # set the default tag for the gridappsd and viz containers
-GRIDAPPSD_TAG=':develop'
+GRIDAPPSD_TAG=':v2022.03.0'
 
 # parse options
 while getopts dprt: option ; do
