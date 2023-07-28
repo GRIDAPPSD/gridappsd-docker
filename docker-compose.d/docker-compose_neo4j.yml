@@ -1,0 +1,19 @@
+version: '2'
+
+services:
+  neo4j-apoc:
+    image: neo4j:5.7.0-community
+    ports:
+      - 7474:7474
+      - 7687:7687
+    environment:
+      - NEO4J_dbms_memory_transaction_total_max=10g
+      - NEO4J_server_memory_heap_max__size=10g
+      - NEO4J_apoc_export_file_enabled=true
+      - NEO4J_apoc_import_file_enabled=true
+      - NEO4J_apoc_import_file_use__neo4j__config=true
+      - NEO4JLABS_PLUGINS=\[\"apoc\"\]
+    volumes:
+      - /home/ec2-user/playground/docker_data/data:/data 
+      - /home/ec2-user/playground/docker_data/plugins:/plugins 
+      - /home/ec2-user/playground/docker_data/import:/import 
