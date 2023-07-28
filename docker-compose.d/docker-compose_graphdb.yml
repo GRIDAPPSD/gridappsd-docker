@@ -1,0 +1,7 @@
+version: '2'
+
+services:
+  graphdb:
+    image: ontotext/graphdb:9.11.2-se
+    ports:
+      - 127.0.0.1:7200:7200
