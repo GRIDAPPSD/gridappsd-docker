@@ -1,5 +1,3 @@
-version: '2'
-
 services:
   sample_app:
     image: gridappsd/sample_app${GRIDAPPSD_TAG}
