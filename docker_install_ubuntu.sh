@@ -2,7 +2,7 @@
 
 # Environment variables you need to set so you don't have to edit the script below.
 DOCKER_CHANNEL=stable
-DOCKER_COMPOSE_VERSION=1.18.0
+DOCKER_COMPOSE_VERSION=2.26.0
 
 # Update the apt package index.
 sudo apt-get update
