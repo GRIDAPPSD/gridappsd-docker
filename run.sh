@@ -45,17 +45,25 @@ configure_viz () {
   cat > conf/viz.config << EOF
 {
     "version": "remote$GRIDAPPSD_TAG",
-    "host": "$remote_ip:61614"
+    "host": "${remote_ip}/ws/"
 }
 EOF
 
   cat > docker-compose.d/viz.yml << EOF
-version: '2'
-
 services:
   viz:
     volumes:
     - ./conf/viz.config:/gridappsd/viz/assets/config.json
+  nginx:
+    image: nginx:latest
+    container_name: nginx
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf
+    ports:
+      - 80:80
+    depends_on:
+      - viz
+      - gridappsd
 EOF
 
   else
