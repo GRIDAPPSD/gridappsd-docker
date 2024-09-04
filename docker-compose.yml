@@ -56,8 +56,8 @@ services:
   viz:
     image: gridappsd/viz${GRIDAPPSD_TAG}
     container_name: viz
-    ports:
-      - 8080:8082
+    #ports:
+    #  - 8080:8082
     depends_on:
       - gridappsd
 
