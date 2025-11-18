@@ -1,5 +1,26 @@
 #!/bin/bash
 
+# Detect docker compose command (newer 'docker compose' vs older 'docker-compose')
+detect_docker_compose() {
+  if docker compose version &>/dev/null; then
+    echo "docker compose"
+  elif docker-compose --version &>/dev/null; then
+    echo "docker-compose"
+  else
+    echo ""
+  fi
+}
+
+DOCKER_COMPOSE_CMD=$(detect_docker_compose)
+
+if [ -z "$DOCKER_COMPOSE_CMD" ]; then
+  echo "Error: Neither 'docker compose' nor 'docker-compose' command found"
+  echo "Please install Docker Compose"
+  exit 1
+fi
+
+echo "Using: $DOCKER_COMPOSE_CMD"
+
 usage () {
   /bin/echo "Usage:  $0 [-d] [-p] [-r [ip address]] [-t tag]"
   /bin/echo "        -d      debug"
@@ -75,7 +96,7 @@ debug_msg() {
 pull_containers() {
   echo " "
   echo "Pulling updated containers"
-  docker-compose $compose_files pull --ignore-pull-failures
+  $DOCKER_COMPOSE_CMD $compose_files pull --ignore-pull-failures
 }
 
 http_status_container() {
@@ -99,7 +120,7 @@ http_status_container() {
     sleep 1
     count=`expr $count + 1`
   done
-  
+
   debug_msg "tried $url $count times, max is $maxcount"
   if [ $count -ge $maxcount ]; then
     echo "Error contacting $url ($status)"
@@ -166,7 +187,7 @@ if [ ! -f "$data_dir/$mysql_file" ]; then
   curl -s -o "$data_dir/$mysql_file" "https://raw.githubusercontent.com/GRIDAPPSD/Bootstrap/master/$mysql_file"
   if [ -f $data_dir/$mysql_file ]; then
     sed -i'.bak' -e "s/'gridappsd'@'localhost'/'gridappsd'@'%'/g" $data_dir/$mysql_file
-    # clean up 
+    # clean up
     rm $data_dir/${mysql_file}.bak
   else
     echo "Error downloading $data_dir/$mysql_file"
@@ -181,15 +202,13 @@ echo "Getting blazegraph status"
 status=$(curl -s --head -w %{http_code} "$url_blazegraph" -o /dev/null)
 debug_msg "blazegraph curl status: $status"
 
-#if [ $GRIDAPPSD_TAG  == ':develop' ]; then
 pull_containers
-#fi
 
 echo " "
 echo "Starting the docker containers"
 echo " "
 echo " "
-docker-compose $compose_files up -d
+$DOCKER_COMPOSE_CMD $compose_files up -d
 container_status=$?
 
 if [ $container_status -ne 0 ]; then
@@ -233,8 +252,16 @@ echo "Containers are running"
 echo "$url_viz"
 
 if tty -s ; then
-  gridappsd_container=`docker inspect  --format="{{.Name}}" \`docker-compose $compose_files ps -q gridappsd\` | sed 's:/::'`
-  
+  # Try to get container ID from docker-compose ps, fall back to container name
+  gridappsd_container_id=$($DOCKER_COMPOSE_CMD $compose_files ps -q gridappsd 2>/dev/null)
+
+  if [ -z "$gridappsd_container_id" ]; then
+    # Fall back to using the container name directly
+    gridappsd_container="gridappsd"
+  else
+    gridappsd_container=$(docker inspect --format="{{.Name}}" "$gridappsd_container_id" | sed 's:^/::')
+  fi
+
   echo " "
   echo "Connecting to the gridappsd container"
   echo "docker exec -it $gridappsd_container /bin/bash"

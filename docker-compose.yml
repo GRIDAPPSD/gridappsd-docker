@@ -7,11 +7,11 @@ services:
   #    GRIDAPPSD_USER: system
   #    GRIDAPPSD_PASS: manager
     depends_on:
-      - gridappsd 
+      - gridappsd
     #volumes:
       # Change upto the : where you have your git repository on your
       # computer.  The : delinates between the host (your computer) and
-      # the container (inside of the container)  
+      # the container (inside of the container)
       #
       # In order for the app to be registered with gridappsd a configuration
       # file must be mounted or copied to /appconfig
@@ -22,12 +22,16 @@ services:
       # reflected inside the container.
       #
       #- $HOME/git/gridappsd-sample-app/:/usr/src/gridappsd-sample
-      
+
   blazegraph:
     image: gridappsd/blazegraph${GRIDAPPSD_TAG}
     container_name: blazegraph
     ports:
       - 8889:8080
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
 
   redis:
     image: redis:3.2.11-alpine

@@ -1,6 +1,25 @@
 #!/bin/bash
 
+# Detect docker compose command (newer 'docker compose' vs older 'docker-compose')
+detect_docker_compose() {
+  if docker compose version &>/dev/null; then
+    echo "docker compose"
+  elif docker-compose --version &>/dev/null; then
+    echo "docker-compose"
+  else
+    echo ""
+  fi
+}
 
+DOCKER_COMPOSE_CMD=$(detect_docker_compose)
+
+if [ -z "$DOCKER_COMPOSE_CMD" ]; then
+  echo "Error: Neither 'docker compose' nor 'docker-compose' command found"
+  echo "Please install Docker Compose"
+  exit 1
+fi
+
+echo "Using: $DOCKER_COMPOSE_CMD"
 
 usage () {
   /bin/echo "Usage:  $0 [-c|w]"
@@ -12,7 +31,7 @@ usage () {
 clean_up () {
   echo " "
   echo "Removing docker containers"
-  docker-compose $compose_files down
+  $DOCKER_COMPOSE_CMD $compose_files down
 
   # remove the dump files if -c option
   if [ $cleanup -eq 1 ]; then
@@ -105,7 +124,7 @@ shift `expr $OPTIND - 1`
 
 echo " "
 echo "Shutting down the docker containers"
-docker-compose $compose_files stop
+$DOCKER_COMPOSE_CMD $compose_files stop
 
 if [ $cleanup -gt 0 ]; then
   clean_up
