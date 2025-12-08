@@ -1,25 +1,9 @@
 #!/bin/bash
 
-# Detect docker compose command (newer 'docker compose' vs older 'docker-compose')
-detect_docker_compose() {
-  if docker compose version &>/dev/null; then
-    echo "docker compose"
-  elif docker-compose --version &>/dev/null; then
-    echo "docker-compose"
-  else
-    echo ""
-  fi
-}
+# Source common utilities
+source "$(dirname "$0")/utils.sh"
 
-DOCKER_COMPOSE_CMD=$(detect_docker_compose)
-
-if [ -z "$DOCKER_COMPOSE_CMD" ]; then
-  echo "Error: Neither 'docker compose' nor 'docker-compose' command found"
-  echo "Please install Docker Compose"
-  exit 1
-fi
-
-echo "Using: $DOCKER_COMPOSE_CMD"
+init_docker_compose
 
 usage () {
   /bin/echo "Usage:  $0 [-c|w]"
@@ -97,13 +81,12 @@ clean_up () {
 }
 
 blazegraph_models="EPRI_DPV_J1.xml IEEE123.xml R2_12_47_2.xml IEEE8500.xml ieee8500.xml"
-mysql_file="gridappsd_mysql_dump.sql"
-data_dir="dumps"
+mysql_file="$MYSQL_FILE"
+data_dir="$DATA_DIR"
 cleanup=0
 database_dirs="gridappsdmysql gridappsd"
 
-compose_files=$( ls -1 docker-compose.d/*yml 2>/dev/null | sed -e 's/^/-f /g' | tr '\n' ' ' )
-compose_files="-f docker-compose.yml $compose_files"
+compose_files=$(get_compose_files)
 echo "Compose files: $compose_files"
 
 # parse options

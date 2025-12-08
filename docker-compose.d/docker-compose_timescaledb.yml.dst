@@ -1,0 +1,78 @@
+services:
+  gridappsd_integration:
+      build:
+        context: ../Centralized/gridappsd_integration
+        dockerfile: Dockerfile
+      container_name: gridappsd_integration
+      environment:
+        GRIDAPPSD_URI: tcp://gridappsd:61613
+        GRIDAPPSD_USER: system
+        GRIDAPPSD_PASSWORD: manager
+        # Database mode: 'influxdb' (default) or 'timescale'
+        DATABASE_MODE: ${DATABASE_MODE:-influxdb}
+        # TimescaleDB connection (only used if DATABASE_MODE=timescale)
+        # Uses host.docker.internal to connect to proven-docker TimescaleDB running on host
+        TIMESCALE_HOST: ${TIMESCALE_HOST:-host.docker.internal}
+        TIMESCALE_PORT: ${TIMESCALE_PORT:-5432}
+        TIMESCALE_DB: ${TIMESCALE_DB:-gridappsd_ts}
+        TIMESCALE_USER: ${TIMESCALE_USER:-postgres}
+        TIMESCALE_PASSWORD: ${TIMESCALE_PASSWORD:-supersecure123}
+      depends_on:
+        - gridappsd
+      volumes:
+        - ../Centralized/gridappsd_integration/input:/app/input
+        - ../Centralized/gridappsd_integration/output:/app/output
+        - ../Centralized/gridappsd_integration/src:/app/src
+      entrypoint: ["/bin/bash", "-c"]
+      command: ["tail -f /dev/null"]
+
+  timescaledb:
+    image: timescale/timescaledb-ha:pg16.11-ts2.24.0-oss
+    container_name: "gridappsd_ts"
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      POSTGRES_USER: ${PG_USER:-postgres}
+      POSTGRES_PASSWORD: ${PG_PASS:-supersecure123}
+      POSTGRES_DB: gridappsd_ts
+      DROP_EXISTING: "true"
+
+    volumes:
+      - ${HOME_DIRECTORY:-./tsdata}/tsdb/mydata:/var/lib/postgresql/data
+      - ../apps/proven-docker/timeseriesdb/init-db.sh:/docker-entrypoint-initdb.d/01-init-db.sh
+      - ../apps/proven-docker/timeseriesdb/create_roles.sql:/docker-entrypoint-initdb.d/sql/create_roles.sql
+      - ../apps/proven-docker/timeseriesdb/create_tables.sql:/docker-entrypoint-initdb.d/sql/create_tables.sql
+      - ../apps/proven-docker/timeseriesdb/grant_privs.sql:/docker-entrypoint-initdb.d/sql/grant_privs.sql
+  # PostgREST - REST API for TimescaleDB
+  # Uses 'authenticator' role created in apps/proven-docker/timeseriesdb/create_roles.sql
+  # This role has NOINHERIT and grants web_anon for anonymous API access
+  postgrest:
+    image: postgrest/postgrest
+    container_name: "gridappsd_postgrest"
+    restart: always
+    ports:
+      - "3000:3000"
+    environment:
+      PGRST_DB_URI: postgres://authenticator:mysecretpassword@timescaledb:5432/${TIMESCALE_DB:-gridappsd_ts}
+      PGRST_DB_SCHEMAS: api
+      PGRST_DB_ANON_ROLE: web_anon
+      PGRST_OPENAPI_SERVER_PROXY_URI: http://localhost:3000
+    depends_on:
+      - timescaledb
+
+  pgadmin:
+    image: dpage/pgadmin4
+    restart: always
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_DEFAULT_EMAIL:-admin@admin.com}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_DEFAULT_PASSWORD:-supersecure123}
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+
+
+
+volumes:
+  pgadmin_data:
