@@ -80,13 +80,18 @@ services:
       - 8000:8000
       # Add debugging to your application via the following port
       - 8888:8888
-
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     working_dir: /gridappsd
+    entrypoint: ["/bin/bash", "-c"]
+    command: ["tail -f /dev/null | ./run-gridappsd.sh"]
     environment:
       - PATH=/home/gridappsd/.local/bin:/gridappsd/bin:/gridappsd/lib:/gridappsd/services/fncsgossbridge/service:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
       - LD_LIBRARY_PATH=/usr/local/lib64
       # Start the platform on boot
-      - AUTOSTART=0
+      - AUTOSTART=1
       # X11 application support--use same display as host, typically ":0"
       # - DISPLAY=${DISPLAY}
       # Debugging is only necessary if you intend to remote debug the GridAPPS-D process iself.

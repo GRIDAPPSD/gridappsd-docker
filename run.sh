@@ -6,8 +6,9 @@ source "$(dirname "$0")/utils.sh"
 init_docker_compose
 
 usage () {
-  /bin/echo "Usage:  $0 [-d] [-p] [-r [ip address]] [-t tag]"
+  /bin/echo "Usage:  $0 [-d] [-n] [-p] [-r [ip address]] [-t tag]"
   /bin/echo "        -d      debug"
+  /bin/echo "        -n      no auto-start, drop into container shell"
   /bin/echo "        -p      pull updated containers"
   /bin/echo "        -r      use remote ip address for viz, will use external ip if no address is supplied"
   /bin/echo "        -t tag  specify gridappsd docker tag"
@@ -121,14 +122,18 @@ data_dir="$DATA_DIR"
 debug=0
 exists=0
 remote_ip=''
+no_autostart=0
 # set the default tag for the gridappsd and viz containers
 GRIDAPPSD_TAG=':v2023.07.0'
 
 # parse options
-while getopts dprt: option ; do
+while getopts dnprt: option ; do
   case $option in
     d) # enable debug output
       debug=1
+      ;;
+    n) # no auto-start, drop into container shell
+      no_autostart=1
       ;;
     p) # pull updated containers
       pull_containers
@@ -158,6 +163,20 @@ create_env
 [ ! -z "$remote_ip" ] && configure_viz
 
 compose_files=$(get_compose_files)
+
+# If -n flag is used, create override to disable auto-start
+if [ $no_autostart -eq 1 ]; then
+  cat > docker-compose.d/no-autostart.yml << EOF
+services:
+  gridappsd:
+    entrypoint: ["/bin/bash"]
+    command: []
+    environment:
+      - AUTOSTART=0
+EOF
+  compose_files="$compose_files -f docker-compose.d/no-autostart.yml"
+fi
+
 echo "Compose files: $compose_files"
 
 
@@ -234,7 +253,8 @@ echo "Containers are running"
 
 echo "$url_viz"
 
-if tty -s ; then
+# Only drop into container shell if -n flag was used
+if [ $no_autostart -eq 1 ] && tty -s ; then
   # Try to get container ID from docker-compose ps, fall back to container name
   gridappsd_container_id=$($DOCKER_COMPOSE_CMD $compose_files ps -q gridappsd 2>/dev/null)
 
@@ -250,6 +270,23 @@ if tty -s ; then
   echo "docker exec -it $gridappsd_container /bin/bash"
   echo " "
   docker exec -it $gridappsd_container /bin/bash
+else
+  echo " "
+  echo "GridAPPS-D is starting automatically."
+  echo " "
+  echo "Available endpoints:"
+  echo "  Web UI:        http://localhost:8080/"
+  echo "  Blazegraph:    http://localhost:8889/bigdata/"
+  echo "  STOMP:         tcp://localhost:61613"
+  echo "  WebSocket:     ws://localhost:61614"
+  echo "  OpenWire:      tcp://localhost:61616"
+  echo " "
+  echo "To connect to the container:"
+  echo "  docker exec -it gridappsd /bin/bash"
+  echo " "
+  echo "To view logs:"
+  echo "  docker logs -f gridappsd"
+  echo " "
 fi
 
 exit 0

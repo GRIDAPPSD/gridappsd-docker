@@ -66,6 +66,12 @@ clean_up () {
     rm docker-compose.d/viz.yml
   fi
 
+  if [ -f docker-compose.d/no-autostart.yml ] ; then
+    echo " "
+    echo "Removing the no-autostart compose file"
+    rm docker-compose.d/no-autostart.yml
+  fi
+
   for dbdir in $database_dirs; do
     if [ -d $dbdir ] ; then
       echo " "
