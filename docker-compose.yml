@@ -32,6 +32,12 @@ services:
       nofile:
         soft: 65536
         hard: 65536
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8080/bigdata/namespace"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
 
   redis:
     image: redis:3.2.11-alpine
@@ -48,7 +54,12 @@ services:
     container_name: mysql
     ports:
       - 3306:3306
-
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "gridappsd", "-pgridappsd1234"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+      start_period: 30s
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
       MYSQL_PORT: 3306
@@ -68,6 +79,7 @@ services:
   gridappsd:
     image: gridappsd/gridappsd${GRIDAPPSD_TAG}
     container_name: gridappsd
+    restart: unless-stopped
     ports:
       # Each of the following are port mappings from the host into the
       # container.  The first three are used by GridAPPS-D for the different
@@ -85,6 +97,13 @@ services:
         soft: 65536
         hard: 65536
     working_dir: /gridappsd
+    # Health check to verify GridAPPS-D is running and accepting connections
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:61614/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     environment:
       - PATH=/home/gridappsd/.local/bin:/gridappsd/bin:/gridappsd/lib:/gridappsd/services/fncsgossbridge/service:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
       - LD_LIBRARY_PATH=/usr/local/lib64
@@ -95,6 +114,10 @@ services:
       # Debugging is only necessary if you intend to remote debug the GridAPPS-D process iself.
       # Turning this on will allow the user to remote debug the gridappsd server on port 8000.
       - DEBUG=1
+      # Maximum restart attempts for GridAPPS-D inside the container (default: 5)
+      - MAX_RESTARTS=5
+      # Delay between restart attempts in seconds (default: 5)
+      - RESTART_DELAY=5
     # volumes:
       # X11 application support--share X11 port with container host
       # - /tmp/.X11-unix:/tmp/.X11-unix
@@ -116,9 +139,12 @@ services:
 #    volumes:
 #      - ./debug-scripts:/gridappsd/debug-scripts
     depends_on:
-      - mysql
-      - blazegraph
-      - redis
+      mysql:
+        condition: service_healthy
+      blazegraph:
+        condition: service_healthy
+      redis:
+        condition: service_started
 
   proven:
     image: gridappsd/proven${GRIDAPPSD_TAG}
