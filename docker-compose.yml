@@ -66,7 +66,7 @@ services:
       - gridappsd
 
   gridappsd:
-    image: gridappsd/gridappsd${GRIDAPPSD_TAG}
+    image: gridappsd/gridappsd:local # ${GRIDAPPSD_TAG}
     container_name: gridappsd
     ports:
       # Each of the following are port mappings from the host into the
@@ -85,8 +85,6 @@ services:
         soft: 65536
         hard: 65536
     working_dir: /gridappsd
-    entrypoint: ["/bin/bash", "-c"]
-    command: ["tail -f /dev/null | ./run-gridappsd.sh"]
     environment:
       - PATH=/home/gridappsd/.local/bin:/gridappsd/bin:/gridappsd/lib:/gridappsd/services/fncsgossbridge/service:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
       - LD_LIBRARY_PATH=/usr/local/lib64

@@ -169,8 +169,8 @@ if [ $no_autostart -eq 1 ]; then
   cat > docker-compose.d/no-autostart.yml << EOF
 services:
   gridappsd:
-    entrypoint: ["/bin/bash"]
-    command: []
+    stdin_open: true
+    tty: true
     environment:
       - AUTOSTART=0
 EOF
