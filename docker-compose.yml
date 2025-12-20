@@ -1,14 +1,14 @@
 services:
-  sample_app:
-    image: gridappsd/sample_app${GRIDAPPSD_TAG}
-    container_name: sample_app
-    environment:
-      GRIDAPPSD_URI: tcp://gridappsd:61613
-  #    GRIDAPPSD_USER: system
-  #    GRIDAPPSD_PASS: manager
-    depends_on:
-      - gridappsd
-    #volumes:
+  # sample_app:
+  #   image: gridappsd/sample_app${GRIDAPPSD_TAG}
+  #   container_name: sample_app
+  #   environment:
+  #     GRIDAPPSD_URI: tcp://gridappsd:61613
+  # #    GRIDAPPSD_USER: system
+  # #    GRIDAPPSD_PASS: manager
+  #   depends_on:
+  #     - gridappsd
+  #   #volumes:
       # Change upto the : where you have your git repository on your
       # computer.  The : delinates between the host (your computer) and
       # the container (inside of the container)
@@ -55,7 +55,7 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
-      start_period: 120s
+      start_period: 30s
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
       MYSQL_PORT: 3306
