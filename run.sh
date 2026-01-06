@@ -6,11 +6,12 @@ source "$(dirname "$0")/utils.sh"
 init_docker_compose
 
 usage () {
-  /bin/echo "Usage:  $0 [-d] [-n] [-p] [-r [ip address]] [-t tag]"
+  /bin/echo "Usage:  $0 [-d] [-n] [-p] [-r [ip address]] [-s] [-t tag]"
   /bin/echo "        -d      debug"
   /bin/echo "        -n      no auto-start, drop into container shell"
   /bin/echo "        -p      pull updated containers"
   /bin/echo "        -r      use remote ip address for viz, will use external ip if no address is supplied"
+  /bin/echo "        -s      services only mode (no gridappsd container, for local development)"
   /bin/echo "        -t tag  specify gridappsd docker tag"
   exit 2
 }
@@ -123,11 +124,12 @@ debug=0
 exists=0
 remote_ip=''
 no_autostart=0
+services_only=0
 # set the default tag for the gridappsd and viz containers
 GRIDAPPSD_TAG=':v2023.07.0'
 
 # parse options
-while getopts dnprt: option ; do
+while getopts dnprst: option ; do
   case $option in
     d) # enable debug output
       debug=1
@@ -148,6 +150,9 @@ while getopts dnprt: option ; do
         remote_ip=$( curl -s ifconfig.me )
       fi
       ;;
+    s) # Services only mode (no gridappsd container)
+      services_only=1
+      ;;
     t) # Pass gridappsd tag to docker-compose
       GRIDAPPSD_TAG=":$OPTARG"
       ;;
@@ -160,9 +165,14 @@ shift `expr $OPTIND - 1`
 
 [ -f '.env' ] && exists=1
 create_env
-[ ! -z "$remote_ip" ] && configure_viz
+#[ ! -z "$remote_ip" ] && configure_viz
 
-compose_files=$(get_compose_files)
+# Set compose files based on mode
+if [ $services_only -eq 1 ]; then
+  compose_files="-f docker-compose-services.yml"
+else
+  compose_files=$(get_compose_files)
+fi
 
 # If -n flag is used, create override to disable auto-start
 if [ $no_autostart -eq 1 ]; then
@@ -235,7 +245,7 @@ echo " "
 rangeCount=`curl -s -G -H 'Accept: application/xml' "${url_blazegraph}sparql" --data-urlencode ESTCARD | sed 's/.*rangeCount=\"\([0-9]*\)\".*/\1/'`
 echo "Blazegrpah data available ($rangeCount)"
 
-http_status_container 'viz'
+#http_status_container 'viz'
 
 # echo " "
 # echo "Opening web browser to the viz container $url_viz"
@@ -251,10 +261,27 @@ http_status_container 'viz'
 echo " "
 echo "Containers are running"
 
-echo "$url_viz"
+#echo "$url_viz"
 
-# Only drop into container shell if -n flag was used
-if [ $no_autostart -eq 1 ] && tty -s ; then
+# Handle different modes
+if [ $services_only -eq 1 ]; then
+  echo " "
+  echo "Services-only mode: Supporting services are running."
+  echo " "
+  echo "Available endpoints:"
+  echo "  Blazegraph:    http://localhost:8889/bigdata/"
+  echo "  MySQL:         localhost:3306"
+  echo "  Redis:         localhost:6379"
+  echo "  InfluxDB:      http://localhost:8086"
+  echo "  Proven:        http://localhost:18080"
+  echo " "
+  echo "You can now start GridAPPS-D locally with embedded ActiveMQ."
+  echo " "
+  echo "To stop services:"
+  echo "  ./stop.sh -s"
+  echo " "
+elif [ $no_autostart -eq 1 ] && tty -s ; then
+  # Only drop into container shell if -n flag was used
   # Try to get container ID from docker-compose ps, fall back to container name
   gridappsd_container_id=$($DOCKER_COMPOSE_CMD $compose_files ps -q gridappsd 2>/dev/null)
 

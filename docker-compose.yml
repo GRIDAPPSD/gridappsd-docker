@@ -64,16 +64,16 @@ services:
       - ./gridappsd/mysql:/var/lib/mysql
       - ./dumps/gridappsd_mysql_dump.sql:/docker-entrypoint-initdb.d/schema.sql:ro
 
-  viz:
-    image: gridappsd/viz${GRIDAPPSD_TAG}
-    container_name: viz
-    ports:
-      - 8080:8082
-    depends_on:
-      - gridappsd
+  # viz:
+  #   image: gridappsd/viz${GRIDAPPSD_TAG}
+  #   container_name: viz
+  #   ports:
+  #     - 8080:8082
+  #   depends_on:
+  #     - gridappsd
 
   gridappsd:
-    image: gridappsd/gridappsd${GRIDAPPSD_TAG}
+    image: gridappsd/gridappsd:local # ${GRIDAPPSD_TAG}
     container_name: gridappsd
     restart: unless-stopped
     ports:

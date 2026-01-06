@@ -6,8 +6,9 @@ source "$(dirname "$0")/utils.sh"
 init_docker_compose
 
 usage () {
-  /bin/echo "Usage:  $0 [-c|w]"
+  /bin/echo "Usage:  $0 [-c|w] [-s]"
   /bin/echo "        -c      remove containers and downloaded dump files and mysql database"
+  /bin/echo "        -s      services only mode (stop services started with run.sh -s)"
   /bin/echo "        -w      remove containers and mysql database, preserve downloaded dump files"
   exit 2
 }
@@ -90,16 +91,17 @@ blazegraph_models="EPRI_DPV_J1.xml IEEE123.xml R2_12_47_2.xml IEEE8500.xml ieee8
 mysql_file="$MYSQL_FILE"
 data_dir="$DATA_DIR"
 cleanup=0
+services_only=0
 database_dirs="gridappsdmysql gridappsd"
 
-compose_files=$(get_compose_files)
-echo "Compose files: $compose_files"
-
 # parse options
-while getopts cw option ; do
+while getopts csw option ; do
   case $option in
     c) # Cleanup downloads and containers and dump files
       cleanup=1
+      ;;
+    s) # Services only mode
+      services_only=1
       ;;
     w) # Cleanup downloads and containers
       cleanup=2
@@ -109,6 +111,14 @@ while getopts cw option ; do
       ;;
   esac
 done
+
+# Set compose files based on mode
+if [ $services_only -eq 1 ]; then
+  compose_files="-f docker-compose-services.yml"
+else
+  compose_files=$(get_compose_files)
+fi
+echo "Compose files: $compose_files"
 shift `expr $OPTIND - 1`
 
 echo " "
