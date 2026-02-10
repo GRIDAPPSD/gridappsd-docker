@@ -75,7 +75,7 @@ debug_msg() {
 pull_containers() {
   echo " "
   echo "Pulling updated containers"
-  docker-compose $compose_files pull --ignore-pull-failures
+  docker compose $compose_files pull --ignore-pull-failures
 }
 
 http_status_container() {
@@ -189,7 +189,7 @@ echo " "
 echo "Starting the docker containers"
 echo " "
 echo " "
-docker-compose $compose_files up -d
+docker compose $compose_files up -d
 container_status=$?
 
 if [ $container_status -ne 0 ]; then
@@ -233,7 +233,7 @@ echo "Containers are running"
 echo "$url_viz"
 
 if tty -s ; then
-  gridappsd_container=`docker inspect  --format="{{.Name}}" \`docker-compose $compose_files ps -q gridappsd\` | sed 's:/::'`
+  gridappsd_container=`docker inspect  --format="{{.Name}}" \`docker compose $compose_files ps -q gridappsd\` | sed 's:/::'`
   
   echo " "
   echo "Connecting to the gridappsd container"
