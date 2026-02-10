@@ -148,6 +148,10 @@ services:
     container_name: proven
     ports:
       - 18080:8080
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     environment:
       # PROVEN_SERVICES_PORT - Proven service port [18080]
       # PROVEN_SWAGGER_HOST_PORT - Host and port value for Swagger (<host>:<port>)
