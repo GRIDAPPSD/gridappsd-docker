@@ -73,7 +73,7 @@ services:
   #     - gridappsd
 
   gridappsd:
-    image: gridappsd/gridappsd:${GRIDAPPSD_TAG}
+    image: gridappsd/gridappsd${GRIDAPPSD_TAG}
     container_name: gridappsd
     restart: unless-stopped
     ports:
