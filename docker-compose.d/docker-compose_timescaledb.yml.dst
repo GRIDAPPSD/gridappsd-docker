@@ -1,7 +1,7 @@
 services:
   gridappsd_integration:
       build:
-        context: ../Centralized/gridappsd_integration
+        # context: ../Centralized/gridappsd_integration
         dockerfile: Dockerfile
       container_name: gridappsd_integration
       environment:
