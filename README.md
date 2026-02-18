@@ -2,89 +2,191 @@
 
 ## Requirements
   - git
-  - docker version 17.12 or higher
-  - docker-compose version 1.16.1 or higher
+  - Docker version 17.12 or higher
+  - Docker Compose (either `docker compose` or `docker-compose`)
 
-## Docker and prerequisite install on OS X
- - git
-    - OS X requires xcode
- ```
- xcode-select --install
- ```
+## Install Docker
+
+See [DOCKER_INSTALL.md](DOCKER_INSTALL.md) for detailed installation instructions for:
+- Ubuntu / Debian
+- Fedora / RHEL / CentOS
+- macOS
+- Windows
 
 ## Clone or download the repository
-```
-  git clone https://github.com/GRIDAPPSD/gridappsd-docker
-  cd gridappsd-docker
+```bash
+git clone https://github.com/GRIDAPPSD/gridappsd-docker
+cd gridappsd-docker
 ```
 
-## Install Docker on Ubuntu
-  - run the docker-ce installation script
- ```
- ./docker_install_ubuntu.sh
- ```
-  - log out of your Ubuntu session and log back in to make the docker groups change active
+## Check Available Versions
+
+To see available GridAPPS-D versions on Docker Hub:
+```bash
+./get-versions.sh           # Show release versions (v2023.07.0 format)
+./get-versions.sh -a        # Show all tags including develop, latest
+./get-versions.sh -n 20     # Show more results
+```
 
 ## Start the docker container services
 ```
 ./run.sh
 ```
-The run.sh does the folowing
- -  download the mysql dump file
- -  download the blazegraph data
- -  start the docker containers
- -  ingest the blazegraph data
- -  connect to the gridappsd container
+The run.sh script does the following:
+ - Downloads the mysql dump file
+ - Downloads the blazegraph data
+ - Starts the docker containers
+ - Ingests the blazegraph data
+ - Starts GridAPPS-D automatically
 
-## Start gridappsd
+### run.sh Options
 
-Now we are inside the executing container
+| Option | Description |
+|--------|-------------|
+| `-d` | Enable debug output |
+| `-n` | No auto-start; drop into container shell instead |
+| `-p` | Pull updated containers |
+| `-r [ip]` | Use remote IP address for viz (uses external IP if not specified) |
+| `-t tag` | Specify GridAPPS-D docker tag (e.g., `-t v2023.07.0`) |
+
+### Examples
+```bash
+./run.sh                    # Start with auto-start (default)
+./run.sh -n                 # Start and drop into container shell
+./run.sh -t develop         # Use develop tag
+./run.sh -t v2023.07.0      # Use specific version
 ```
-root@737c30c82df7:/gridappsd# ./run-gridappsd.sh
 
+## Available Endpoints
+
+Once running, GridAPPS-D is available at:
+
+| Service | URL/Address |
+|---------|-------------|
+| Web UI | http://localhost:8080/ |
+| Blazegraph | http://localhost:8889/bigdata/ |
+| STOMP | tcp://localhost:61613 |
+| WebSocket | ws://localhost:61614 |
+| OpenWire | tcp://localhost:61616 |
+
+## Connecting to the Container
+
+```bash
+docker exec -it gridappsd /bin/bash
 ```
-Open your browser to http://localhost:8080/
 
-[Using GridAPPS-D](https://gridappsd.readthedocs.io/en/master/using_gridappsd/index.html)
+## Viewing Logs
 
-## Exiting the container and stopping the containers
-
+```bash
+docker logs -f gridappsd
 ```
-Use Ctrl+C to stop gridappsd from running
-exit
-./stop.sh
+
+## Stopping the containers
+
+```bash
+./stop.sh           # Stop containers
+./stop.sh -c        # Stop and remove containers, dump files, and databases
+./stop.sh -w        # Stop and remove containers and databases, keep dump files
 ```
+
+> **Note:** There is also a `remove_all_containers.sh` script, but be aware that it removes **ALL** Docker containers and unused networks on your system, not just GridAPPS-D. Use `./stop.sh -c` to remove only GridAPPS-D containers.
 
 ## Restarting the containers
 ```
 ./run.sh
 ```
 
-## Reconnecting to the gridappsd container
-
-Reconnect to the running gridappsd container
-```
-user@foo>docker exec -it gridappsd bash
-
-```
-
 ## Next Steps
   - Add applications/services to the containers (see how <https://github.com/GRIDAPPSD/gridappsd-sample-app>)
 
+---
+
+## docker-compose.d Directory
+
+The `docker-compose.d/` directory allows you to extend the base docker-compose configuration with additional services. Any `.yml` file in this directory is automatically included when running `./run.sh`.
+
+### How It Works
+
+1. The `run.sh` script scans `docker-compose.d/` for files ending in `.yml`
+2. Each `.yml` file is added to the docker-compose command with `-f`
+3. Services defined in these files are started alongside the core GridAPPS-D services
+
+### Adding Optional Services
+
+The directory contains `.dist` files as templates for optional services:
+
+| File | Description |
+|------|-------------|
+| `docker-compose_pyvvo.yml.dist` | PyVVO voltage optimization app |
+| `docker-compose_der-dispatch.yml.dist` | DER dispatch service |
+| `docker-compose_solar-forecast.yml.dist` | Solar forecasting service |
+| `docker-compose_grid-forecasting.yml.dist` | Grid forecasting service |
+| `docker-compose_wsu-vvo.yml.dist` | WSU VVO application |
+| `docker-compose_wsu-restoration.yml.cplex` | WSU restoration (requires CPLEX) |
+| `docker-compose_timescaledb.yml.dst` | TimescaleDB for time-series data |
+
+To enable an optional service:
+```bash
+# Copy and rename the template (remove .dist suffix)
+cp docker-compose.d/docker-compose_pyvvo.yml.dist docker-compose.d/docker-compose_pyvvo.yml
+
+# Edit as needed
+nano docker-compose.d/docker-compose_pyvvo.yml
+
+# Restart to include the new service
+./stop.sh
+./run.sh
+```
+
+### Auto-Generated Files
+
+The following files may be auto-generated by `run.sh` and are cleaned up by `stop.sh -c`:
+
+- `viz.yml` - Created when using `-r` flag for remote viz configuration
+- `no-autostart.yml` - Created when using `-n` flag to disable auto-start
+
+### Creating Custom Services
+
+Create a new `.yml` file in `docker-compose.d/`:
+
+```yaml
+services:
+  my-custom-app:
+    image: my-app:latest
+    environment:
+      GRIDAPPSD_URI: tcp://gridappsd:61613
+    depends_on:
+      - gridappsd
+```
+
+---
+
 ## Advanced Usage
+
 ### Using GridAPPS-D on a remote system with a local browser
 
-## Start the docker container services
-```
+```bash
 ./run.sh -r
 ```
 
-## Start gridappsd
-
-Now we are inside the executing container
-```
-root@737c30c82df7:/gridappsd# ./run-gridappsd.sh
-
-```
-
 Open your browser to http://remoteip:8080/
+
+### Using a specific version
+
+```bash
+# Check available versions
+./get-versions.sh
+
+# Run with a specific version
+./run.sh -t v2023.07.0
+```
+
+### Development mode (no auto-start)
+
+```bash
+./run.sh -n
+# Inside the container:
+./run-gridappsd.sh
+```
+
+[Using GridAPPS-D](https://gridappsd.readthedocs.io/en/master/using_gridappsd/index.html)

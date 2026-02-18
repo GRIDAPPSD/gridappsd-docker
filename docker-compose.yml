@@ -1,17 +1,17 @@
 services:
-  sample_app:
-    image: gridappsd/sample_app${GRIDAPPSD_TAG}
-    container_name: sample_app
-    environment:
-      GRIDAPPSD_URI: tcp://gridappsd:61613
-  #    GRIDAPPSD_USER: system
-  #    GRIDAPPSD_PASS: manager
-    depends_on:
-      - gridappsd 
-    #volumes:
+  # sample_app:
+  #   image: gridappsd/sample_app${GRIDAPPSD_TAG}
+  #   container_name: sample_app
+  #   environment:
+  #     GRIDAPPSD_URI: tcp://gridappsd:61613
+  # #    GRIDAPPSD_USER: system
+  # #    GRIDAPPSD_PASS: manager
+  #   depends_on:
+  #     - gridappsd
+  #   #volumes:
       # Change upto the : where you have your git repository on your
       # computer.  The : delinates between the host (your computer) and
-      # the container (inside of the container)  
+      # the container (inside of the container)
       #
       # In order for the app to be registered with gridappsd a configuration
       # file must be mounted or copied to /appconfig
@@ -22,7 +22,7 @@ services:
       # reflected inside the container.
       #
       #- $HOME/git/gridappsd-sample-app/:/usr/src/gridappsd-sample
-      
+
   blazegraph:
     image: gridappsd/blazegraph${GRIDAPPSD_TAG}
     container_name: blazegraph
@@ -48,7 +48,14 @@ services:
     container_name: mysql
     ports:
       - 3306:3306
-
+    healthcheck:
+      # Use mysqladmin ping without credentials - it returns 0 if server is up
+      # even if access is denied (which is fine for a health check)
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
     environment:
       MYSQL_RANDOM_ROOT_PASSWORD: "yes"
       MYSQL_PORT: 3306
@@ -57,17 +64,18 @@ services:
       - ./gridappsd/mysql:/var/lib/mysql
       - ./dumps/gridappsd_mysql_dump.sql:/docker-entrypoint-initdb.d/schema.sql:ro
 
-  viz:
-    image: gridappsd/viz${GRIDAPPSD_TAG}
-    container_name: viz
-    ports:
-      - 8080:8082
-    depends_on:
-      - gridappsd
+  # viz:
+  #   image: gridappsd/viz${GRIDAPPSD_TAG}
+  #   container_name: viz
+  #   ports:
+  #     - 8080:8082
+  #   depends_on:
+  #     - gridappsd
 
   gridappsd:
     image: gridappsd/gridappsd${GRIDAPPSD_TAG}
     container_name: gridappsd
+    restart: unless-stopped
     ports:
       # Each of the following are port mappings from the host into the
       # container.  The first three are used by GridAPPS-D for the different
@@ -80,18 +88,33 @@ services:
       - 8000:8000
       # Add debugging to your application via the following port
       - 8888:8888
-
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
     working_dir: /gridappsd
+    # Health check to verify GridAPPS-D is running and accepting connections
+    # Uses TCP connection test since 61616 (OpenWire) is JMS, not HTTP
+    healthcheck:
+      test: ["CMD-SHELL", "timeout 5 bash -c 'cat < /dev/null > /dev/tcp/localhost/61616' || exit 1"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
     environment:
       - PATH=/home/gridappsd/.local/bin:/gridappsd/bin:/gridappsd/lib:/gridappsd/services/fncsgossbridge/service:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
       - LD_LIBRARY_PATH=/usr/local/lib64
       # Start the platform on boot
-      - AUTOSTART=0
+      - AUTOSTART=1
       # X11 application support--use same display as host, typically ":0"
       # - DISPLAY=${DISPLAY}
       # Debugging is only necessary if you intend to remote debug the GridAPPS-D process iself.
       # Turning this on will allow the user to remote debug the gridappsd server on port 8000.
       - DEBUG=1
+      # Maximum restart attempts for GridAPPS-D inside the container (default: 5)
+      - MAX_RESTARTS=5
+      # Delay between restart attempts in seconds (default: 5)
+      - RESTART_DELAY=5
     # volumes:
       # X11 application support--share X11 port with container host
       # - /tmp/.X11-unix:/tmp/.X11-unix
@@ -113,9 +136,12 @@ services:
 #    volumes:
 #      - ./debug-scripts:/gridappsd/debug-scripts
     depends_on:
-      - mysql
-      - blazegraph
-      - redis
+      mysql:
+        condition: service_healthy
+      blazegraph:
+        condition: service_started
+      redis:
+        condition: service_started
 
   proven:
     image: gridappsd/proven${GRIDAPPSD_TAG}
