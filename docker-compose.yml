@@ -9,19 +9,19 @@ services:
   #   depends_on:
   #     - gridappsd
   #   #volumes:
-      # Change upto the : where you have your git repository on your
-      # computer.  The : delinates between the host (your computer) and
-      # the container (inside of the container)
-      #
-      # In order for the app to be registered with gridappsd a configuration
-      # file must be mounted or copied to /appconfig
-      # - $HOME/git/gridappsd-sample-app/sample_app.config:/appconfig
+  # Change upto the : where you have your git repository on your
+  # computer.  The : delinates between the host (your computer) and
+  # the container (inside of the container)
+  #
+  # In order for the app to be registered with gridappsd a configuration
+  # file must be mounted or copied to /appconfig
+  # - $HOME/git/gridappsd-sample-app/sample_app.config:/appconfig
 
-      # When debugging apps it is helpful to mount the application over the
-      # top of where it normally be ran so that changes on the host are immediately
-      # reflected inside the container.
-      #
-      #- $HOME/git/gridappsd-sample-app/:/usr/src/gridappsd-sample
+  # When debugging apps it is helpful to mount the application over the
+  # top of where it normally be ran so that changes on the host are immediately
+  # reflected inside the container.
+  #
+  #- $HOME/git/gridappsd-sample-app/:/usr/src/gridappsd-sample
 
   blazegraph:
     image: gridappsd/blazegraph${GRIDAPPSD_TAG}
@@ -64,13 +64,13 @@ services:
       - ./gridappsd/mysql:/var/lib/mysql
       - ./dumps/gridappsd_mysql_dump.sql:/docker-entrypoint-initdb.d/schema.sql:ro
 
-  # viz:
-  #   image: gridappsd/viz${GRIDAPPSD_TAG}
-  #   container_name: viz
-  #   ports:
-  #     - 8080:8082
-  #   depends_on:
-  #     - gridappsd
+  viz:
+    image: gridappsd/viz${GRIDAPPSD_TAG}
+    container_name: viz
+    ports:
+      - 8080:8082
+    depends_on:
+      - gridappsd
 
   gridappsd:
     image: gridappsd/gridappsd${GRIDAPPSD_TAG}
@@ -96,7 +96,11 @@ services:
     # Health check to verify GridAPPS-D is running and accepting connections
     # Uses TCP connection test since 61616 (OpenWire) is JMS, not HTTP
     healthcheck:
-      test: ["CMD-SHELL", "timeout 5 bash -c 'cat < /dev/null > /dev/tcp/localhost/61616' || exit 1"]
+      test:
+        [
+          "CMD-SHELL",
+          "timeout 5 bash -c 'cat < /dev/null > /dev/tcp/localhost/61616' || exit 1",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -116,25 +120,25 @@ services:
       # Delay between restart attempts in seconds (default: 5)
       - RESTART_DELAY=5
     # volumes:
-      # X11 application support--share X11 port with container host
-      # - /tmp/.X11-unix:/tmp/.X11-unix
-# The following allow applications to be mounted into the container so that
-# gridappsd can start them in the correct context.
-#
-# The format is local_path:container_path where local_path is on the host machine and the
-# container_dir is inside the container.  The paths can be either a file or a directory.  In
-# order for gridappsd to recognize it as an application the container path must be inside
-# the /gridappsd/applications.  For services the container path must be inside /gridappsd/services.
-#
-# The following assumes you have cloned/downloaded the sample app in a sibling folder of this
-# repository.  Once uncommenting the three lines below the sample_app will be available in the
-# container
-#
-#    volumes:
-#      - ~/git/gridappsd-sample-app/sample_app:/gridappsd/applications/sample_app
-#      - ~/git/gridappsd-sample-app/sample_app/sample_app.config:/gridappsd/applications/sample_app.config
-#    volumes:
-#      - ./debug-scripts:/gridappsd/debug-scripts
+    # X11 application support--share X11 port with container host
+    # - /tmp/.X11-unix:/tmp/.X11-unix
+    # The following allow applications to be mounted into the container so that
+    # gridappsd can start them in the correct context.
+    #
+    # The format is local_path:container_path where local_path is on the host machine and the
+    # container_dir is inside the container.  The paths can be either a file or a directory.  In
+    # order for gridappsd to recognize it as an application the container path must be inside
+    # the /gridappsd/applications.  For services the container path must be inside /gridappsd/services.
+    #
+    # The following assumes you have cloned/downloaded the sample app in a sibling folder of this
+    # repository.  Once uncommenting the three lines below the sample_app will be available in the
+    # container
+    #
+    #    volumes:
+    #      - ~/git/gridappsd-sample-app/sample_app:/gridappsd/applications/sample_app
+    #      - ~/git/gridappsd-sample-app/sample_app/sample_app.config:/gridappsd/applications/sample_app.config
+    #    volumes:
+    #      - ./debug-scripts:/gridappsd/debug-scripts
     depends_on:
       mysql:
         condition: service_healthy
@@ -180,4 +184,3 @@ services:
       INFLUXDB_DB: "proven"
     ports:
       - 8086:8086
-
