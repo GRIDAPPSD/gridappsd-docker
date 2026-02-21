@@ -6,7 +6,8 @@ source "$(dirname "$0")/utils.sh"
 init_docker_compose
 
 usage () {
-  /bin/echo "Usage:  $0 [-d] [-n] [-p] [-r [ip address]] [-s] [-t tag]"
+  /bin/echo "Usage:  $0 [-c conf_dir] [-d] [-n] [-p] [-r [ip address]] [-s] [-t tag]"
+  /bin/echo "        -c dir  mount local directory at /conf in gridappsd container"
   /bin/echo "        -d      debug"
   /bin/echo "        -n      no auto-start, drop into container shell"
   /bin/echo "        -p      pull updated containers"
@@ -125,12 +126,19 @@ exists=0
 remote_ip=''
 no_autostart=0
 services_only=0
+conf_dir=''
 # set the default tag for the gridappsd and viz containers
 GRIDAPPSD_TAG=':v2023.07.0'
 
+# Clean up transient overrides from previous runs
+rm -f docker-compose.d/conf-override.yml docker-compose.d/no-autostart.yml
+
 # parse options
-while getopts dnprst: option ; do
+while getopts c:dnprst: option ; do
   case $option in
+    c) # Custom conf directory mounted at /conf
+      conf_dir="$OPTARG"
+      ;;
     d) # enable debug output
       debug=1
       ;;
@@ -187,6 +195,21 @@ EOF
   compose_files="$compose_files -f docker-compose.d/no-autostart.yml"
 fi
 
+# If -c flag is used, create override to mount custom conf directory at /conf
+if [ -n "$conf_dir" ]; then
+  if [ ! -d "$conf_dir" ]; then
+    echo "Error: conf directory '$conf_dir' does not exist"
+    exit 1
+  fi
+  cat > docker-compose.d/conf-override.yml << EOF
+services:
+  gridappsd:
+    volumes:
+      - ./${conf_dir}:/conf
+EOF
+  compose_files="$compose_files -f docker-compose.d/conf-override.yml"
+fi
+
 echo "Compose files: $compose_files"
 
 
@@ -215,6 +238,14 @@ status=$(curl -s --head -w %{http_code} "$url_blazegraph" -o /dev/null)
 debug_msg "blazegraph curl status: $status"
 
 pull_containers
+
+echo " "
+echo "Removing stale containers from previous runs"
+$DOCKER_COMPOSE_CMD $compose_files down --remove-orphans 2>/dev/null
+# Force remove containers by name in case they were orphaned from a different project
+$DOCKER_COMPOSE_CMD $compose_files config 2>/dev/null | grep 'container_name:' | awk '{print $2}' | while read -r name; do
+  docker rm -f "$name" 2>/dev/null
+done
 
 echo " "
 echo "Starting the docker containers"

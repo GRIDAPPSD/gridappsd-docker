@@ -1,0 +1,105 @@
+services:
+  # Downloads the OTel Java agent jar into a shared volume for gridappsd
+  otel-agent-init:
+    image: alpine:3.19
+    container_name: otel-agent-init
+    volumes:
+      - otel_agent:/otel
+    entrypoint: ["sh", "-c", "[ -f /otel/opentelemetry-javaagent.jar ] || wget -O /otel/opentelemetry-javaagent.jar https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.25.0/opentelemetry-javaagent.jar"]
+
+  gridappsd:
+    environment:
+      - OTEL_SERVICE_NAME=gridappsd
+      - OTEL_EXPORTER_OTLP_ENDPOINT=http://otel-collector:4318
+      - OTEL_EXPORTER_OTLP_PROTOCOL=http/protobuf
+      - OTEL_TRACES_EXPORTER=otlp
+      - OTEL_METRICS_EXPORTER=otlp
+      - OTEL_LOGS_EXPORTER=otlp
+    volumes:
+      - otel_agent:/gridappsd/otel:ro
+    depends_on:
+      otel-agent-init:
+        condition: service_completed_successfully
+      otel-collector:
+        condition: service_started
+
+  otel-collector:
+    image: otel/opentelemetry-collector-contrib:0.96.0
+    container_name: otel-collector
+    restart: unless-stopped
+    ports:
+      - "4317:4317"   # OTLP gRPC receiver
+      - "4318:4318"   # OTLP HTTP receiver
+    volumes:
+      - ./conf/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
+    depends_on:
+      - tempo
+      - loki
+      - prometheus
+
+  prometheus:
+    image: prom/prometheus:v2.51.0
+    container_name: prometheus
+    restart: unless-stopped
+    ports:
+      - "9090:9090"
+    volumes:
+      - ./conf/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+      - prometheus_data:/prometheus
+    command:
+      - --config.file=/etc/prometheus/prometheus.yml
+      - --storage.tsdb.path=/prometheus
+      - --storage.tsdb.retention.time=15d
+      - --web.enable-remote-write-receiver
+
+  tempo:
+    image: grafana/tempo:2.4.1
+    container_name: tempo
+    restart: unless-stopped
+    ports:
+      - "3200:3200"   # Tempo HTTP API
+    volumes:
+      - ./conf/tempo.yaml:/etc/tempo/config.yaml:ro
+      - tempo_data:/var/tempo
+    command:
+      - -config.file=/etc/tempo/config.yaml
+
+  loki:
+    image: grafana/loki:2.9.5
+    container_name: loki
+    restart: unless-stopped
+    ports:
+      - "3100:3100"
+    volumes:
+      - ./conf/loki.yaml:/etc/loki/config.yaml:ro
+      - loki_data:/loki
+    command:
+      - -config.file=/etc/loki/config.yaml
+
+  grafana:
+    image: grafana/grafana:10.4.1
+    container_name: grafana
+    restart: unless-stopped
+    ports:
+      - "4000:3000"
+    environment:
+      GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
+      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
+    volumes:
+      - ./conf/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
+      - ./conf/grafana-dashboard-provisioning.yaml:/etc/grafana/provisioning/dashboards/dashboards.yaml:ro
+      - ./conf/grafana-dashboards:/var/lib/grafana/dashboards:ro
+      - grafana_data:/var/lib/grafana
+    depends_on:
+      - prometheus
+      - tempo
+      - loki
+
+volumes:
+  otel_agent:
+  prometheus_data:
+  tempo_data:
+  loki_data:
+  grafana_data:

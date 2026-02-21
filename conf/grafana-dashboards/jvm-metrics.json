@@ -1,0 +1,223 @@
+{
+  "annotations": { "list": [] },
+  "editable": true,
+  "fiscalYearStartMonth": 0,
+  "graphTooltip": 1,
+  "links": [],
+  "panels": [
+    {
+      "title": "JVM Heap Memory Used",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "fillOpacity": 20 }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum(jvm_memory_used_bytes{job=\"gridappsd\", jvm_memory_type=\"heap\"}) by (jvm_memory_pool_name)",
+          "legendFormat": "{{jvm_memory_pool_name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "JVM Heap Memory Committed vs Limit",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 0 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "fillOpacity": 10 }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum(jvm_memory_committed_bytes{job=\"gridappsd\", jvm_memory_type=\"heap\"})",
+          "legendFormat": "Committed",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(jvm_memory_limit_bytes{job=\"gridappsd\", jvm_memory_type=\"heap\"})",
+          "legendFormat": "Limit",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(jvm_memory_used_bytes{job=\"gridappsd\", jvm_memory_type=\"heap\"})",
+          "legendFormat": "Used",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "title": "JVM Non-Heap Memory Used",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "bytes",
+          "custom": { "fillOpacity": 20 }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum(jvm_memory_used_bytes{job=\"gridappsd\", jvm_memory_type=\"non_heap\"}) by (jvm_memory_pool_name)",
+          "legendFormat": "{{jvm_memory_pool_name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "GC Pause Duration (p95)",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 8 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "s",
+          "custom": { "fillOpacity": 10 }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "histogram_quantile(0.95, sum(rate(jvm_gc_duration_seconds_bucket{job=\"gridappsd\"}[5m])) by (le, jvm_gc_name))",
+          "legendFormat": "{{jvm_gc_name}}",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "JVM Threads",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 0, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "custom": { "fillOpacity": 10 }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "sum(jvm_thread_count{job=\"gridappsd\"})",
+          "legendFormat": "Total threads",
+          "refId": "A"
+        },
+        {
+          "expr": "sum(jvm_thread_count{job=\"gridappsd\", jvm_thread_daemon=\"true\"})",
+          "legendFormat": "Daemon threads",
+          "refId": "B"
+        },
+        {
+          "expr": "sum(jvm_thread_count{job=\"gridappsd\"}) by (jvm_thread_state)",
+          "legendFormat": "{{jvm_thread_state}}",
+          "refId": "C"
+        }
+      ]
+    },
+    {
+      "title": "JVM CPU Usage",
+      "type": "timeseries",
+      "gridPos": { "h": 8, "w": 12, "x": 12, "y": 16 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": {
+        "defaults": {
+          "unit": "percentunit",
+          "min": 0,
+          "max": 1,
+          "custom": { "fillOpacity": 20 }
+        },
+        "overrides": []
+      },
+      "targets": [
+        {
+          "expr": "jvm_cpu_recent_utilization_ratio{job=\"gridappsd\"}",
+          "legendFormat": "Process CPU",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "Classes Loaded",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 0, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "jvm_class_count{job=\"gridappsd\"}",
+          "legendFormat": "Loaded",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "GC Collections/min",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 6, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "cpm" }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "sum(rate(jvm_gc_duration_seconds_count{job=\"gridappsd\"}[5m])) * 60",
+          "legendFormat": "GC/min",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "CPU Count",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 12, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "targets": [
+        {
+          "expr": "jvm_cpu_count{job=\"gridappsd\"}",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ]
+    },
+    {
+      "title": "CPU Time",
+      "type": "stat",
+      "gridPos": { "h": 4, "w": 6, "x": 18, "y": 24 },
+      "datasource": { "type": "prometheus", "uid": "${DS_PROMETHEUS}" },
+      "fieldConfig": { "defaults": { "unit": "s" }, "overrides": [] },
+      "targets": [
+        {
+          "expr": "jvm_cpu_time_seconds_total{job=\"gridappsd\"}",
+          "legendFormat": "",
+          "refId": "A"
+        }
+      ]
+    }
+  ],
+  "schemaVersion": 39,
+  "tags": ["gridappsd", "jvm"],
+  "templating": {
+    "list": [
+      {
+        "current": { "selected": false, "text": "Prometheus", "value": "Prometheus" },
+        "hide": 0,
+        "includeAll": false,
+        "name": "DS_PROMETHEUS",
+        "options": [],
+        "query": "prometheus",
+        "refresh": 1,
+        "type": "datasource"
+      }
+    ]
+  },
+  "time": { "from": "now-1h", "to": "now" },
+  "title": "GridAPPS-D JVM Metrics",
+  "uid": "gridappsd-jvm-metrics"
+}

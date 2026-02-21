@@ -66,6 +66,8 @@ services:
 
   viz:
     image: gridappsd/viz${GRIDAPPSD_TAG}
+    environment:
+      - GRIDAPPSD_WS_HOST=127.0.0.1
     container_name: viz
     ports:
       - 8080:8082
@@ -73,7 +75,7 @@ services:
       - gridappsd
 
   gridappsd:
-    image: gridappsd/gridappsd${GRIDAPPSD_TAG}
+    image: gridappsd/gridappsd:local # ${GRIDAPPSD_TAG}
     container_name: gridappsd
     restart: unless-stopped
     ports:
