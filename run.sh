@@ -1,10 +1,18 @@
 #!/bin/bash
 
+# Source common utilities
+source "$(dirname "$0")/utils.sh"
+
+init_docker_compose
+
 usage () {
-  /bin/echo "Usage:  $0 [-d] [-p] [-r [ip address]] [-t tag]"
+  /bin/echo "Usage:  $0 [-c conf_dir] [-d] [-n] [-p] [-r [ip address]] [-s] [-t tag]"
+  /bin/echo "        -c dir  mount local directory at /conf in gridappsd container"
   /bin/echo "        -d      debug"
+  /bin/echo "        -n      no auto-start, drop into container shell"
   /bin/echo "        -p      pull updated containers"
   /bin/echo "        -r      use remote ip address for viz, will use external ip if no address is supplied"
+  /bin/echo "        -s      services only mode (no gridappsd container, for local development)"
   /bin/echo "        -t tag  specify gridappsd docker tag"
   exit 2
 }
@@ -75,7 +83,7 @@ debug_msg() {
 pull_containers() {
   echo " "
   echo "Pulling updated containers"
-  docker compose $compose_files pull --ignore-pull-failures
+  $DOCKER_COMPOSE_CMD $compose_files pull --ignore-pull-failures
 }
 
 http_status_container() {
@@ -99,7 +107,7 @@ http_status_container() {
     sleep 1
     count=`expr $count + 1`
   done
-  
+
   debug_msg "tried $url $count times, max is $maxcount"
   if [ $count -ge $maxcount ]; then
     echo "Error contacting $url ($status)"
@@ -111,19 +119,31 @@ http_status_container() {
 
 url_viz="http://localhost:8080/"
 url_blazegraph="http://localhost:8889/bigdata/namespace/kb/"
-mysql_file="gridappsd_mysql_dump.sql"
-data_dir="dumps"
+mysql_file="$MYSQL_FILE"
+data_dir="$DATA_DIR"
 debug=0
 exists=0
 remote_ip=''
+no_autostart=0
+services_only=0
+conf_dir=''
 # set the default tag for the gridappsd and viz containers
 GRIDAPPSD_TAG=':v2023.07.0'
 
+# Clean up transient overrides from previous runs
+rm -f docker-compose.d/conf-override.yml docker-compose.d/no-autostart.yml
+
 # parse options
-while getopts dprt: option ; do
+while getopts c:dnprst: option ; do
   case $option in
+    c) # Custom conf directory mounted at /conf
+      conf_dir="$OPTARG"
+      ;;
     d) # enable debug output
       debug=1
+      ;;
+    n) # no auto-start, drop into container shell
+      no_autostart=1
       ;;
     p) # pull updated containers
       pull_containers
@@ -138,6 +158,9 @@ while getopts dprt: option ; do
         remote_ip=$( curl -s ifconfig.me )
       fi
       ;;
+    s) # Services only mode (no gridappsd container)
+      services_only=1
+      ;;
     t) # Pass gridappsd tag to docker-compose
       GRIDAPPSD_TAG=":$OPTARG"
       ;;
@@ -150,10 +173,43 @@ shift `expr $OPTIND - 1`
 
 [ -f '.env' ] && exists=1
 create_env
-[ ! -z "$remote_ip" ] && configure_viz
+#[ ! -z "$remote_ip" ] && configure_viz
 
-compose_files=$( ls -1 docker-compose.d/*yml 2>/dev/null | sed -e 's/^/-f /g' | tr '\n' ' ' )
-compose_files="-f docker-compose.yml $compose_files"
+# Set compose files based on mode
+if [ $services_only -eq 1 ]; then
+  compose_files="-f docker-compose-services.yml"
+else
+  compose_files=$(get_compose_files)
+fi
+
+# If -n flag is used, create override to disable auto-start
+if [ $no_autostart -eq 1 ]; then
+  cat > docker-compose.d/no-autostart.yml << EOF
+services:
+  gridappsd:
+    stdin_open: true
+    tty: true
+    environment:
+      - AUTOSTART=0
+EOF
+  compose_files="$compose_files -f docker-compose.d/no-autostart.yml"
+fi
+
+# If -c flag is used, create override to mount custom conf directory at /conf
+if [ -n "$conf_dir" ]; then
+  if [ ! -d "$conf_dir" ]; then
+    echo "Error: conf directory '$conf_dir' does not exist"
+    exit 1
+  fi
+  cat > docker-compose.d/conf-override.yml << EOF
+services:
+  gridappsd:
+    volumes:
+      - ./${conf_dir}:/conf
+EOF
+  compose_files="$compose_files -f docker-compose.d/conf-override.yml"
+fi
+
 echo "Compose files: $compose_files"
 
 
@@ -166,7 +222,7 @@ if [ ! -f "$data_dir/$mysql_file" ]; then
   curl -s -o "$data_dir/$mysql_file" "https://raw.githubusercontent.com/GRIDAPPSD/Bootstrap/master/$mysql_file"
   if [ -f $data_dir/$mysql_file ]; then
     sed -i'.bak' -e "s/'gridappsd'@'localhost'/'gridappsd'@'%'/g" $data_dir/$mysql_file
-    # clean up 
+    # clean up
     rm $data_dir/${mysql_file}.bak
   else
     echo "Error downloading $data_dir/$mysql_file"
@@ -181,15 +237,21 @@ echo "Getting blazegraph status"
 status=$(curl -s --head -w %{http_code} "$url_blazegraph" -o /dev/null)
 debug_msg "blazegraph curl status: $status"
 
-#if [ $GRIDAPPSD_TAG  == ':develop' ]; then
 pull_containers
-#fi
+
+echo " "
+echo "Removing stale containers from previous runs"
+$DOCKER_COMPOSE_CMD $compose_files down --remove-orphans 2>/dev/null
+# Force remove containers by name in case they were orphaned from a different project
+$DOCKER_COMPOSE_CMD $compose_files config 2>/dev/null | grep 'container_name:' | awk '{print $2}' | while read -r name; do
+  docker rm -f "$name" 2>/dev/null
+done
 
 echo " "
 echo "Starting the docker containers"
 echo " "
 echo " "
-docker compose $compose_files up -d
+$DOCKER_COMPOSE_CMD $compose_files up -d
 container_status=$?
 
 if [ $container_status -ne 0 ]; then
@@ -214,7 +276,7 @@ echo " "
 rangeCount=`curl -s -G -H 'Accept: application/xml' "${url_blazegraph}sparql" --data-urlencode ESTCARD | sed 's/.*rangeCount=\"\([0-9]*\)\".*/\1/'`
 echo "Blazegrpah data available ($rangeCount)"
 
-http_status_container 'viz'
+#http_status_container 'viz'
 
 # echo " "
 # echo "Opening web browser to the viz container $url_viz"
@@ -230,16 +292,59 @@ http_status_container 'viz'
 echo " "
 echo "Containers are running"
 
-echo "$url_viz"
+#echo "$url_viz"
 
-if tty -s ; then
-  gridappsd_container=`docker inspect  --format="{{.Name}}" \`docker compose $compose_files ps -q gridappsd\` | sed 's:/::'`
-  
+# Handle different modes
+if [ $services_only -eq 1 ]; then
+  echo " "
+  echo "Services-only mode: Supporting services are running."
+  echo " "
+  echo "Available endpoints:"
+  echo "  Blazegraph:    http://localhost:8889/bigdata/"
+  echo "  MySQL:         localhost:3306"
+  echo "  Redis:         localhost:6379"
+  echo "  InfluxDB:      http://localhost:8086"
+  echo "  Proven:        http://localhost:18080"
+  echo " "
+  echo "You can now start GridAPPS-D locally with embedded ActiveMQ."
+  echo " "
+  echo "To stop services:"
+  echo "  ./stop.sh -s"
+  echo " "
+elif [ $no_autostart -eq 1 ] && tty -s ; then
+  # Only drop into container shell if -n flag was used
+  # Try to get container ID from docker-compose ps, fall back to container name
+  gridappsd_container_id=$($DOCKER_COMPOSE_CMD $compose_files ps -q gridappsd 2>/dev/null)
+
+  if [ -z "$gridappsd_container_id" ]; then
+    # Fall back to using the container name directly
+    gridappsd_container="gridappsd"
+  else
+    gridappsd_container=$(docker inspect --format="{{.Name}}" "$gridappsd_container_id" | sed 's:^/::')
+  fi
+
   echo " "
   echo "Connecting to the gridappsd container"
   echo "docker exec -it $gridappsd_container /bin/bash"
   echo " "
   docker exec -it $gridappsd_container /bin/bash
+else
+  echo " "
+  echo "GridAPPS-D is starting automatically."
+  echo " "
+  echo "Available endpoints:"
+  echo "  Web UI:        http://localhost:8080/"
+  echo "  Blazegraph:    http://localhost:8889/bigdata/"
+  echo "  STOMP:         tcp://localhost:61613"
+  echo "  WebSocket:     ws://localhost:61614"
+  echo "  OpenWire:      tcp://localhost:61616"
+  echo " "
+  echo "To connect to the container:"
+  echo "  docker exec -it gridappsd /bin/bash"
+  echo " "
+  echo "To view logs:"
+  echo "  docker logs -f gridappsd"
+  echo " "
 fi
 
 exit 0

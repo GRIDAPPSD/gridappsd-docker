@@ -1,0 +1,83 @@
+# Docker Compose file for supporting services only (no GridAPPS-D container)
+# Use this when running GridAPPS-D locally outside of Docker
+#
+# Usage:
+#   ./run.sh -s    # Start services only mode
+#   OR
+#   docker compose -f docker-compose-services.yml up -d
+
+services:
+  blazegraph:
+    image: gridappsd/blazegraph${GRIDAPPSD_TAG}
+    container_name: blazegraph
+    ports:
+      - 8889:8080
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+
+  redis:
+    image: redis:3.2.11-alpine
+    container_name: redis
+    ports:
+      - 6379:6379
+
+    volumes:
+      - ./gridappsd/redis/data:/data
+    entrypoint: redis-server --appendonly yes
+
+  mysql:
+    image: mysql/mysql-server:5.7
+    container_name: mysql
+    ports:
+      - 3306:3306
+    healthcheck:
+      # Use mysqladmin ping without credentials - it returns 0 if server is up
+      # even if access is denied (which is fine for a health check)
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+    environment:
+      MYSQL_RANDOM_ROOT_PASSWORD: "yes"
+      MYSQL_PORT: 3306
+
+    volumes:
+      - ./gridappsd/mysql:/var/lib/mysql
+      - ./dumps/gridappsd_mysql_dump.sql:/docker-entrypoint-initdb.d/schema.sql:ro
+
+  proven:
+    image: gridappsd/proven${GRIDAPPSD_TAG}
+    container_name: proven
+    ports:
+      - 18080:8080
+    environment:
+      # PROVEN_SERVICES_PORT - Proven service port [18080]
+      # PROVEN_SWAGGER_HOST_PORT - Host and port value for Swagger (<host>:<port>)
+      # PROVEN_USE_IDB - Use InfluxDB to save provenance metrics (true | false) [false]
+      # PROVEN_IDB_URL - InfluxDB URL [http://localhost:8086]
+      # PROVEN_IDB_DB - InfluxDB Database [proven]
+      # PROVEN_IDB_RP - InfluxDB retention policy [autogen]
+      # PROVEN_IDB_USERNAME - InfluxDb username [root]
+      # PROVEN_IDB_PASSWORD - InfluxDb password [root]
+      # PROVEN_T3DIR - directory location of triple store [user_home_directory]
+      ####
+      - PROVEN_SERVICES_PORT=18080
+      - PROVEN_SWAGGER_HOST_PORT=localhost:18080
+      - PROVEN_USE_IDB=true
+      - PROVEN_IDB_URL=http://influxdb:8086
+      - PROVEN_IDB_DB=proven
+      - PROVEN_IDB_RP=autogen
+      - PROVEN_IDB_USERNAME=root
+      - PROVEN_IDB_PASSWORD=root
+      - PROVEN_T3DIR=/proven
+
+  influxdb:
+    image: gridappsd/influxdb${GRIDAPPSD_TAG}
+    container_name: influxdb
+    environment:
+      INFLUXDB_DB: "proven"
+    ports:
+      - 8086:8086
