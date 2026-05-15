@@ -108,8 +108,8 @@ services:
             retries: 3
             start_period: 60s
         environment:
-            - PATH=/home/gridappsd/.local/bin:/gridappsd/bin:/gridappsd/lib:/gridappsd/services/fncsgossbridge/service:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
-            - LD_LIBRARY_PATH=/usr/local/lib64
+            - PATH=/home/gridappsd/.local/bin:/gridappsd/bin:/gridappsd/lib:/usr/local/bin:/usr/local/sbin:/usr/sbin:/usr/bin:/sbin:/bin
+            # - LD_LIBRARY_PATH=/usr/local/lib64
             # Start the platform on boot
             - AUTOSTART=1
             # X11 application support--use same display as host, typically ":0"
