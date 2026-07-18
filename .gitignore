@@ -5,3 +5,6 @@ applications
 services
 .env
 *.log
+# Activated observability overlay (copied from .dist by observability-up.sh or
+# run.sh; contains no secrets but is host-local state, not repo state).
+docker-compose.d/docker-compose-grafana.yml

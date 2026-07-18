@@ -212,6 +212,10 @@ fi
 
 echo "Compose files: $compose_files"
 
+# GADO-007: refuse to start when the grafana overlay is active and
+# GRAFANA_ADMIN_PASSWORD is unset or empty.  See check_grafana_password in
+# utils.sh for the rationale (Grafana 10.x admin/admin fallback on empty value).
+check_grafana_password "$compose_files"
 
 # Mysql
 [ ! -d "$data_dir" ] && mkdir "$data_dir"
@@ -331,14 +335,7 @@ elif [ $no_autostart -eq 1 ] && tty -s ; then
 else
   echo " "
   echo "GridAPPS-D is starting automatically."
-  echo " "
-  echo "Available endpoints:"
-  echo "  Web UI:        http://localhost:8080/"
-  echo "  Blazegraph:    http://localhost:8889/bigdata/"
-  echo "  STOMP:         tcp://localhost:61613"
-  echo "  WebSocket:     ws://localhost:61614"
-  echo "  OpenWire:      tcp://localhost:61616"
-  echo " "
+  print_access_urls
   echo "To connect to the container:"
   echo "  docker exec -it gridappsd /bin/bash"
   echo " "
