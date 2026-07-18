@@ -69,6 +69,15 @@ ensure_grafana_password() {
     if [ -z "${GRAFANA_ADMIN_PASSWORD:-}" ]; then
       # Generate a strong random password and export it so compose up sees it.
       GRAFANA_ADMIN_PASSWORD="$(openssl rand -base64 18)"
+      # Fail closed if generation yielded empty (openssl absent or errored).
+      # An empty password would revert Grafana 10.x to the admin/admin fallback,
+      # which is exactly the exposure GADO-007/009 exists to prevent.
+      # Note: set -e does not catch a failed command-substitution-in-assignment,
+      # so we check explicitly.
+      [ -n "$GRAFANA_ADMIN_PASSWORD" ] || {
+        echo "error: Grafana admin password generation failed (openssl unavailable or errored); set GRAFANA_ADMIN_PASSWORD manually and re-run" >&2
+        exit 1
+      }
       export GRAFANA_ADMIN_PASSWORD
       # Signal the URL banner to print the generated password with a caveat.
       GRAFANA_PASSWORD_GENERATED=1
@@ -118,6 +127,34 @@ _published_host_port() {
     ""|*[!0-9]*) return 1 ;;
   esac
   echo "$port"
+}
+
+# Print a single Grafana access line, including the generated password and
+# dev-use caveat when GRAFANA_PASSWORD_GENERATED=1 (GADO-009).
+#
+# Usage: _print_grafana_line LABEL URL
+#   LABEL: the display label (e.g. "Grafana:" or "Grafana")
+#   URL:   the full URL string to display
+#
+# When GRAFANA_PASSWORD_GENERATED=1, appends the generated password and a
+# dev-use caveat so the operator knows how to log in.  When the operator
+# supplied their own GRAFANA_ADMIN_PASSWORD (flag absent), prints the bare
+# URL only: never echo an operator-chosen secret.
+#
+# Both print_access_urls and observability-up.sh call this helper so the
+# caveat text and generated-vs-set logic live in exactly one place.
+_print_grafana_line() {
+  local label="$1"
+  local url="$2"
+  if [ "${GRAFANA_PASSWORD_GENERATED:-0}" = "1" ]; then
+    # GADO-009: print the generated password inline with a dev-use caveat.
+    # The operator did not supply a password so printing it here is safe and
+    # necessary: without this line the operator has no way to log in.
+    printf "  %-30s %s  (admin / %s; dev use only, set GRAFANA_ADMIN_PASSWORD to override)\n" \
+      "${label}:" "$url" "${GRAFANA_ADMIN_PASSWORD}"
+  else
+    printf "  %-30s %s\n" "${label}:" "$url"
+  fi
 }
 
 # Print a human-readable access URL list driven by ACTUAL RUNTIME STATE.
@@ -205,12 +242,8 @@ print_access_urls() {
         ;;
     esac
 
-    if [ "$container" = "grafana" ] && [ "${GRAFANA_PASSWORD_GENERATED:-0}" = "1" ]; then
-      # Print the generated password inline with a dev-only caveat (GADO-009).
-      # The operator did not supply a password so printing it here is safe and
-      # necessary: without this line the operator has no way to log in.
-      printf "  %-30s %s  (admin / %s  -- dev-only, set GRAFANA_ADMIN_PASSWORD to override)\n" \
-        "${label}:" "$url" "${GRAFANA_ADMIN_PASSWORD}"
+    if [ "$container" = "grafana" ]; then
+      _print_grafana_line "$label" "$url"
     else
       printf "  %-30s %s\n" "${label}:" "$url"
     fi

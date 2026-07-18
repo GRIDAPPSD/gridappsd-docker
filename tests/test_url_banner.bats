@@ -295,7 +295,7 @@ stub_port() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"http://localhost:4000"* ]]
   [[ "$output" == *"GeneratedTestPw99"* ]]
-  [[ "$output" == *"dev-only"* ]]
+  [[ "$output" == *"dev use only"* ]]
 }
 
 @test "GADO-009: operator-set password flag absent: Grafana line shows URL but no password" {
@@ -307,7 +307,7 @@ stub_port() {
   [ "$status" -eq 0 ]
   [[ "$output" == *"http://localhost:4000"* ]]
   [[ "$output" != *"OperatorSecret42"* ]]
-  [[ "$output" != *"dev-only"* ]]
+  [[ "$output" != *"dev use only"* ]]
 }
 
 @test "GADO-009: grafana not running: no password logic fires regardless of flags" {
@@ -318,5 +318,5 @@ stub_port() {
   [ "$status" -eq 0 ]
   [[ "$output" != *"localhost:4000"* ]]
   [[ "$output" != *"ShouldNotAppear"* ]]
-  [[ "$output" != *"dev-only"* ]]
+  [[ "$output" != *"dev use only"* ]]
 }

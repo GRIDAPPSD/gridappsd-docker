@@ -120,3 +120,45 @@ run_guard() {
   # No generation when overlay is not active
   [[ "$output" != *"FLAG=1"* ]]
 }
+
+# ---------------------------------------------------------------------------
+# Fail-closed: openssl absent or errored (Leon MEDIUM, fix 1)
+# When openssl fails and returns empty, ensure_grafana_password must exit
+# nonzero, must NOT export an empty password, and must NOT set the flag.
+# ---------------------------------------------------------------------------
+@test "GADO-009 fail-closed: openssl absent/errored: exits nonzero" {
+  local fail_stub="$REPO_ROOT/tests/stubs/openssl-fail"
+  run bash -c "
+    export PATH=\"$fail_stub:\$PATH\"
+    source '$UTILS'
+    unset GRAFANA_ADMIN_PASSWORD
+    ensure_grafana_password '-f docker-compose.yml -f $OVERLAY'
+  "
+  [ "$status" -ne 0 ]
+}
+
+@test "GADO-009 fail-closed: openssl absent/errored: does NOT export empty password" {
+  local fail_stub="$REPO_ROOT/tests/stubs/openssl-fail"
+  # exit 1 inside the function terminates the shell before 'export GRAFANA_ADMIN_PASSWORD'
+  # is reached.  Capture stderr (the error message) to confirm the guard fired; its
+  # presence proves the export line was never reached, so no empty password was exported.
+  run bash -c "
+    export PATH=\"$fail_stub:\$PATH\"
+    source '$UTILS'
+    unset GRAFANA_ADMIN_PASSWORD
+    ensure_grafana_password '-f docker-compose.yml -f $OVERLAY'
+  " 2>&1
+  [[ "$output" == *"password generation failed"* ]]
+}
+
+@test "GADO-009 fail-closed: openssl absent/errored: does NOT set generated flag" {
+  local fail_stub="$REPO_ROOT/tests/stubs/openssl-fail"
+  run bash -c "
+    export PATH=\"$fail_stub:\$PATH\"
+    source '$UTILS'
+    unset GRAFANA_ADMIN_PASSWORD
+    ensure_grafana_password '-f docker-compose.yml -f $OVERLAY' || true
+    echo \"FLAG=\${GRAFANA_PASSWORD_GENERATED:-UNSET}\"
+  "
+  [[ "$output" != *"FLAG=1"* ]]
+}

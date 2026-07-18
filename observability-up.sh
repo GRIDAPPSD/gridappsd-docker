@@ -99,11 +99,8 @@ else
   echo ""
   echo "Observability endpoints (loopback by default):"
   bind_host="${OBSERVABILITY_BIND_HOST:-127.0.0.1}"
-  if [[ "${GRAFANA_PASSWORD_GENERATED:-0}" == "1" ]]; then
-    echo "  Grafana:          http://${bind_host}:4000/  (admin / ${GRAFANA_ADMIN_PASSWORD}  -- dev-only, set GRAFANA_ADMIN_PASSWORD to override)"
-  else
-    echo "  Grafana:          http://${bind_host}:4000/"
-  fi
+  # host port mirrors docker-compose-grafana.yml.dist:141 (OBSERVABILITY_BIND_HOST:4000)
+  _print_grafana_line "Grafana" "http://${bind_host}:4000/"
   echo "  Prometheus:       http://${bind_host}:9090/"
   echo "  Loki:             http://${bind_host}:3100/"
   echo "  Tempo:            http://${bind_host}:3200/"
