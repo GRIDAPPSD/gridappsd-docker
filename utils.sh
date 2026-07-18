@@ -35,34 +35,44 @@ get_compose_files() {
   echo "-f docker-compose.yml $files"
 }
 
-# check_grafana_password COMPOSE_FILES_STRING
+# ensure_grafana_password COMPOSE_FILES_STRING
 #
 # When the active grafana overlay (docker-compose.d/docker-compose-grafana.yml)
-# is included in the compose set, verify that GRAFANA_ADMIN_PASSWORD is set
-# and non-empty.  Fail loudly if it is not.
+# is included in the compose set:
+#   - If GRAFANA_ADMIN_PASSWORD is already set and non-empty: leave it unchanged
+#     and return quietly.  The caller's value is used as-is; it is never printed.
+#   - If GRAFANA_ADMIN_PASSWORD is unset or empty: auto-generate a strong random
+#     password with `openssl rand -base64 18`, export it into the current process
+#     so the compose up that follows receives it, and set GRAFANA_PASSWORD_GENERATED=1
+#     so the URL banner can print the generated value with a dev-only caveat.
 #
-# Why: Grafana 10.x treats an empty GF_SECURITY_ADMIN_PASSWORD as unset and
-# falls back to its built-in defaults.ini value ("admin").  Removing the shell
-# fallback in the compose file does NOT produce a fail-closed state inside the
-# image.  This guard is the actual enforcement point.
-check_grafana_password() {
+# Why auto-generate instead of hard-stop (GADO-009):
+#   The previous GADO-007 posture hard-stopped on unset password.  That was
+#   correct for preventing admin/admin exposure, but it created friction for
+#   first-run operators who had not yet chosen a password.  Auto-generate
+#   preserves fail-closed security (no admin/admin fallback, ever) while
+#   removing the manual pre-step for dev/demo use.  The generated password is
+#   printed in the banner so the operator can log in; it is never persisted to
+#   disk or committed.  Operators who want a stable password should set
+#   GRAFANA_ADMIN_PASSWORD before launch; the generated value is intentionally
+#   ephemeral.
+#
+# Both launchers (run.sh and observability-up.sh) call this function so the
+# behavior is consistent: neither silently falls to admin/admin, neither
+# hard-stops on an unset password.
+ensure_grafana_password() {
   local compose_files="$1"
   local grafana_overlay="docker-compose.d/docker-compose-grafana.yml"
-  # Only enforce when the activated grafana overlay is in the compose set.
+  # Only act when the activated grafana overlay is in the compose set.
   # The .dist template is inert; check only for the activated .yml copy.
   if echo "$compose_files" | grep -qF "$grafana_overlay"; then
     if [ -z "${GRAFANA_ADMIN_PASSWORD:-}" ]; then
-      echo "" >&2
-      echo "error: GRAFANA_ADMIN_PASSWORD is not set or is empty." >&2
-      echo "  The Grafana observability overlay is active, but no admin password" >&2
-      echo "  has been supplied.  Grafana 10.x falls back to its built-in default" >&2
-      echo "  (admin/admin) when GF_SECURITY_ADMIN_PASSWORD is empty, which" >&2
-      echo "  restores the exposure GADO-007 was filed to eliminate." >&2
-      echo "" >&2
-      echo "  Export GRAFANA_ADMIN_PASSWORD before running this script:" >&2
-      echo "    export GRAFANA_ADMIN_PASSWORD=<your-password>" >&2
-      echo "" >&2
-      exit 1
+      # Generate a strong random password and export it so compose up sees it.
+      GRAFANA_ADMIN_PASSWORD="$(openssl rand -base64 18)"
+      export GRAFANA_ADMIN_PASSWORD
+      # Signal the URL banner to print the generated password with a caveat.
+      GRAFANA_PASSWORD_GENERATED=1
+      export GRAFANA_PASSWORD_GENERATED
     fi
   fi
 }
@@ -117,6 +127,12 @@ _published_host_port() {
 # is running and that port is currently published. A remap (e.g. grafana on 4001
 # instead of the default 4000) is honoured automatically because the host port
 # comes from the live container, not a hardcoded literal.
+#
+# When GRAFANA_PASSWORD_GENERATED=1 is set (by ensure_grafana_password above),
+# the Grafana line appends the generated password and a dev-only caveat inline.
+# The caveat lands in scrollback/logs; this is intentional per GADO-009.
+# When the operator supplied their own GRAFANA_ADMIN_PASSWORD, no password is
+# printed (never echo an operator-chosen secret).
 #
 # Known surfaces in display order (container_name|container_port|label|scheme|path):
 #   viz         8082  GridAPPS-D Viz (main UI)   http  /
@@ -189,7 +205,15 @@ print_access_urls() {
         ;;
     esac
 
-    printf "  %-30s %s\n" "${label}:" "$url"
+    if [ "$container" = "grafana" ] && [ "${GRAFANA_PASSWORD_GENERATED:-0}" = "1" ]; then
+      # Print the generated password inline with a dev-only caveat (GADO-009).
+      # The operator did not supply a password so printing it here is safe and
+      # necessary: without this line the operator has no way to log in.
+      printf "  %-30s %s  (admin / %s  -- dev-only, set GRAFANA_ADMIN_PASSWORD to override)\n" \
+        "${label}:" "$url" "${GRAFANA_ADMIN_PASSWORD}"
+    else
+      printf "  %-30s %s\n" "${label}:" "$url"
+    fi
   done
 
   if [ "$header_printed" -eq 1 ]; then

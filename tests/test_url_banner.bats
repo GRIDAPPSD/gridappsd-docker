@@ -279,3 +279,44 @@ stub_port() {
   [[ "$output" != *"localhost:3100"* ]]
   [[ "$output" != *"localhost:3200"* ]]
 }
+
+# ---------------------------------------------------------------------------
+# GADO-009: generated-password banner line
+# When GRAFANA_PASSWORD_GENERATED=1 and GRAFANA_ADMIN_PASSWORD is set,
+# the Grafana line includes the password and the dev-only caveat.
+# ---------------------------------------------------------------------------
+
+@test "GADO-009: generated password flag causes Grafana line to show password and caveat" {
+  stub_port grafana 3000 4000
+  # Simulate what ensure_grafana_password sets when it auto-generates
+  export GRAFANA_PASSWORD_GENERATED=1
+  export GRAFANA_ADMIN_PASSWORD="GeneratedTestPw99"
+  run print_access_urls
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"http://localhost:4000"* ]]
+  [[ "$output" == *"GeneratedTestPw99"* ]]
+  [[ "$output" == *"dev-only"* ]]
+}
+
+@test "GADO-009: operator-set password flag absent: Grafana line shows URL but no password" {
+  stub_port grafana 3000 4000
+  # Simulate operator-supplied password: flag is NOT set
+  unset GRAFANA_PASSWORD_GENERATED || true
+  export GRAFANA_ADMIN_PASSWORD="OperatorSecret42"
+  run print_access_urls
+  [ "$status" -eq 0 ]
+  [[ "$output" == *"http://localhost:4000"* ]]
+  [[ "$output" != *"OperatorSecret42"* ]]
+  [[ "$output" != *"dev-only"* ]]
+}
+
+@test "GADO-009: grafana not running: no password logic fires regardless of flags" {
+  # No stub file for grafana = container not running
+  export GRAFANA_PASSWORD_GENERATED=1
+  export GRAFANA_ADMIN_PASSWORD="ShouldNotAppear"
+  run print_access_urls
+  [ "$status" -eq 0 ]
+  [[ "$output" != *"localhost:4000"* ]]
+  [[ "$output" != *"ShouldNotAppear"* ]]
+  [[ "$output" != *"dev-only"* ]]
+}

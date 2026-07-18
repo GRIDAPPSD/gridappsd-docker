@@ -212,10 +212,13 @@ fi
 
 echo "Compose files: $compose_files"
 
-# GADO-007: refuse to start when the grafana overlay is active and
-# GRAFANA_ADMIN_PASSWORD is unset or empty.  See check_grafana_password in
-# utils.sh for the rationale (Grafana 10.x admin/admin fallback on empty value).
-check_grafana_password "$compose_files"
+# GADO-009: when the grafana overlay is active and GRAFANA_ADMIN_PASSWORD is
+# unset or empty, auto-generate a strong password and export it so compose up
+# receives it.  If GRAFANA_ADMIN_PASSWORD is already set, use it unchanged.
+# In both cases the banner (print_access_urls) shows the Grafana URL; only the
+# generated-password case also prints the password inline with a dev-only caveat.
+# Neither path falls back to admin/admin (GADO-007 invariant preserved).
+ensure_grafana_password "$compose_files"
 
 # Mysql
 [ ! -d "$data_dir" ] && mkdir "$data_dir"
