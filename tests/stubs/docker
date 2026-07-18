@@ -1,0 +1,44 @@
+#!/usr/bin/env bash
+# Stub for docker, used only by bats tests.
+# Understands exactly the call shape _published_host_port uses:
+#   docker port <container_name> <container_port>
+#
+# Reads published-port data from $DOCKER_STUB_DIR/<container_name>.ports.
+# Each line in that file:
+#   <container_port>  <bind_address>:<host_port>
+# where <bind_address> may be 0.0.0.0, 127.0.0.1, [::], or ::
+# (mirrors the four forms the real `docker port` command emits).
+# Multiple lines per container_port are supported (one per bind address).
+#
+# If the .ports file is absent, the container is not running (exits 1).
+# If the file exists but the requested port has no entry, exits 1.
+# All other docker subcommands exit 0 with no output (silently ignored).
+set -euo pipefail
+
+if [ "${1:-}" != "port" ]; then
+  exit 0
+fi
+
+container_name="${2:-}"
+container_port="${3:-}"
+
+if [ -z "$container_name" ] || [ -z "${DOCKER_STUB_DIR:-}" ]; then
+  exit 1
+fi
+
+ports_file="${DOCKER_STUB_DIR}/${container_name}.ports"
+if [ ! -f "$ports_file" ]; then
+  echo "Error response from daemon: No such container: ${container_name}" >&2
+  exit 1
+fi
+
+# Collect all binding lines for the requested container port.
+match=$(grep "^${container_port}[[:space:]]" "$ports_file" 2>/dev/null || true)
+if [ -z "$match" ]; then
+  echo "Error: No public port '${container_port}' published for ${container_name}" >&2
+  exit 1
+fi
+
+# Emit the bind-address:host_port field verbatim, one line per binding,
+# matching the real docker port output format.
+printf '%s\n' "$match" | awk '{print $2}'
