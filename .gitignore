@@ -8,3 +8,12 @@ services
 # Activated observability overlay (copied from .dist by observability-up.sh or
 # run.sh; contains no secrets but is host-local state, not repo state).
 docker-compose.d/docker-compose-grafana.yml
+docker-compose.d/*.yml
+*.tar.gz
+*.tgz
+*.zip
+*.bak
+*.swp
+*.swo
+*.tmp
+*Zone.Identifier

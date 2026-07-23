@@ -1,0 +1,59 @@
+# docker-compose_blazegraph-local.yml.nlr
+#
+# INERT TEMPLATE (creation variant). The .nlr suffix is NOT matched by
+# get_compose_files()'s docker-compose.d/*.yml glob (utils.sh), so this file is
+# invisible to run.sh and has no effect on the running stack. It is the
+# reference/creation copy: to activate a local-blazegraph override, copy or
+# rename it to a plain .yml name:
+#
+#     cp docker-compose.d/docker-compose_blazegraph-local.yml.nlr \
+#        docker-compose.d/docker-compose_blazegraph-local.yml
+#
+# HOW THE OVERRIDE WORKS (once activated as .yml)
+#   run.sh -> get_compose_files() (utils.sh) globs docker-compose.d/*.yml and
+#   layers each with -f AFTER the base docker-compose.yml. Compose scalar-merge
+#   semantics mean the last -f file wins for a top-level scalar like `image:`,
+#   so the active file's `image:` overrides gridappsd/blazegraph${GRIDAPPSD_TAG}
+#   from the base. `pull_policy: never` makes run.sh's unconditional
+#   `docker compose pull` step skip this service, so the local image is never
+#   clobbered by a registry pull.
+#
+#   Full-stack mode only. run.sh's services-only branch (-s) uses
+#   docker-compose-services.yml and does NOT merge docker-compose.d/*.yml.
+#
+# LOADING THE IMAGE (and why a plain load is NOT enough)
+#   The raw archive blazegraph.tar.gz is the LEGACY-convention image
+#   (blazegraph:southern_reduced): its CIM model uses
+#   http://<host>/bigdata/namespace/kb/sparql#_<UUID> subject/object URIs and
+#   underscored, uppercase mRID literals. Against the current GridAPPS-D
+#   platform that model lists in the feeder selector but every feeder-scoped
+#   query returns ZERO rows (silent empty network). Loading it as-is does NOT
+#   give you a working blazegraph.
+#
+#   The model must be re-serialized to the GridAPPS-D standard convention
+#   (urn:uuid:<uuid> URIs + bare mRID literals) with the cim-uuid-fix tool from
+#   EPRI_Client before it is usable:
+#
+#     # 1. Load the legacy archive
+#     docker load -i /path/to/blazegraph.tar.gz          # -> blazegraph:southern_reduced
+#
+#     # 2. Run the UUID-replacement transform (EPRI_Client tool). This rewrites
+#     #    the model in a running container and docker-commits it to a new tag.
+#     /home/debian/repos/EPRI_Client/tools/cim-uuid-fix/bin/cim-uuid-fix.sh \
+#         <source-image> <output-image>
+#     #    e.g. blazegraph:southern_reduced -> blazegraph:southern_reduced_urnuuid
+#
+#     docker images | grep blazegraph   # confirm the resulting repo:tag
+#
+#   Set `image:` below to the transformed (urn:uuid) tag, never the raw
+#   southern_reduced legacy tag. Then bring the stack up:
+#
+#     ./stop.sh && ./run.sh
+#
+#   Verified present on this host (2026-07-23), already transformed:
+#     blazegraph:southern_reduced_urnuuid_phase1
+#
+services:
+  blazegraph:
+    image: blazegraph:southern_reduced_urnuuid_phase1
+    pull_policy: never
