@@ -9,6 +9,9 @@
 #     cp docker-compose.d/docker-compose_blazegraph-local.yml.nlr \
 #        docker-compose.d/docker-compose_blazegraph-local.yml
 #
+#   Note: the activated .yml file is deliberately git-ignored (docker-compose.d/*.yml),
+#   so sharing an override with the team requires `git add -f` to force-track it.
+#
 # HOW THE OVERRIDE WORKS (once activated as .yml)
 #   run.sh -> get_compose_files() (utils.sh) globs docker-compose.d/*.yml and
 #   layers each with -f AFTER the base docker-compose.yml. Compose scalar-merge
@@ -39,7 +42,7 @@
 #
 #     # 2. Run the UUID-replacement transform (EPRI_Client tool). This rewrites
 #     #    the model in a running container and docker-commits it to a new tag.
-#     /home/debian/repos/EPRI_Client/tools/cim-uuid-fix/bin/cim-uuid-fix.sh \
+#     <EPRI_Client>/tools/cim-uuid-fix/bin/cim-uuid-fix.sh \
 #         <source-image> <output-image>
 #     #    e.g. blazegraph:southern_reduced -> blazegraph:southern_reduced_urnuuid
 #
@@ -50,7 +53,8 @@
 #
 #     ./stop.sh && ./run.sh
 #
-#   Verified present on this host (2026-07-23), already transformed:
+#   The image tag below assumes a transform has already been run and the
+#   resulting image is available locally:
 #     blazegraph:southern_reduced_urnuuid_phase1
 #
 services:
