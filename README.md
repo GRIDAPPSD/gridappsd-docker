@@ -115,7 +115,7 @@ The `docker-compose.d/` directory allows you to extend the base docker-compose c
 
 ### Adding Optional Services
 
-The directory contains `.dist` files as templates for optional services:
+The directory contains template files (`.dist`, `.nlr` suffixes) for optional services and overrides:
 
 | File | Description |
 |------|-------------|
@@ -127,6 +127,7 @@ The directory contains `.dist` files as templates for optional services:
 | `docker-compose_wsu-restoration.yml.cplex` | WSU restoration (requires CPLEX) |
 | `docker-compose_timescaledb.yml.dst` | TimescaleDB for time-series data |
 | `docker-compose-grafana.yml.dist` | Observability stack: Grafana, Prometheus, Loki, Tempo, OTel collector |
+| `docker-compose_blazegraph-local.yml.nlr` | Local Blazegraph image override (host-local; activated copy is git-ignored) |
 
 To enable an optional service:
 ```bash
