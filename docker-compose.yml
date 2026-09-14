@@ -64,15 +64,37 @@ services:
             - ./gridappsd/mysql:/var/lib/mysql
             - ./dumps/gridappsd_mysql_dump.sql:/docker-entrypoint-initdb.d/schema.sql:ro
 
-    viz:
-        image: gridappsd/viz${GRIDAPPSD_TAG}
+    glimpse-backend:
+        image: gridappsd/glimpse-backend${GRIDAPPSD_TAG}
+        container_name: glimpse-backend
         environment:
-            - GRIDAPPSD_WS_HOST=127.0.0.1
-        container_name: viz
+            - FLASK_HOST=0.0.0.0
+            - FLASK_PORT=5052
+            - CORS_ORIGINS=${GLIMPSE_CORS_ORIGINS:-http://localhost:5173,http://127.0.0.1:5173}
+            - GLIMPSE_API_TOKEN=${GLIMPSE_API_TOKEN:-}
+            - GRIDAPPSD_ADDRESS=gridappsd
+            - GRIDAPPSD_PORT=61613
+            - GRIDAPPSD_USER=${GRIDAPPSD_USER:-system}
+            - GRIDAPPSD_PASSWORD=${GRIDAPPSD_PASSWORD:-manager}
+            - CIMG_URL=${CIMG_URL:-http://blazegraph:8080/bigdata/namespace/kb/sparql}
         ports:
-            - 8080:8082
+            - 5052:5052
+        extra_hosts:
+            - host.docker.internal:host-gateway
         depends_on:
             - gridappsd
+            - blazegraph
+
+    glimpse-frontend:
+        image: gridappsd/glimpse-frontend${GRIDAPPSD_TAG}
+        container_name: glimpse-frontend
+        environment:
+            - API_URL=${GLIMPSE_API_URL:-http://127.0.0.1:5052}
+            - API_TOKEN=${GLIMPSE_API_TOKEN:-}
+        ports:
+            - 5173:80
+        depends_on:
+            - glimpse-backend
 
     gridappsd:
         image: gridappsd/gridappsd${GRIDAPPSD_TAG}
