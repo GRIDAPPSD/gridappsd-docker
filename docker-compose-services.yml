@@ -32,6 +32,16 @@ services:
     container_name: mysql
     ports:
       - 3306:3306
+    # mysql 5.7 sizes internal tables from the nofile limit; the Docker
+    # default (~1 billion) makes it balloon to 15+ GB and OOM the host.
+    ulimits:
+      nofile:
+        soft: 65536
+        hard: 65536
+    # Backstop: if it still grows, only mysql is OOM-killed, then restarted.
+    mem_limit: 2g
+    memswap_limit: 2g
+    restart: unless-stopped
     healthcheck:
       # Use mysqladmin ping without credentials - it returns 0 if server is up
       # even if access is denied (which is fine for a health check)
