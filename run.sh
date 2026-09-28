@@ -212,6 +212,13 @@ fi
 
 echo "Compose files: $compose_files"
 
+# GADO-009: when the grafana overlay is active and GRAFANA_ADMIN_PASSWORD is
+# unset or empty, auto-generate a strong password and export it so compose up
+# receives it.  If GRAFANA_ADMIN_PASSWORD is already set, use it unchanged.
+# In both cases the banner (print_access_urls) shows the Grafana URL; only the
+# generated-password case also prints the password inline with a dev-only caveat.
+# Neither path falls back to admin/admin (GADO-007 invariant preserved).
+ensure_grafana_password "$compose_files"
 
 # Mysql
 [ ! -d "$data_dir" ] && mkdir "$data_dir"
@@ -233,19 +240,21 @@ if [ ! -f "$data_dir/$mysql_file" ]; then
 fi
 
 echo " "
-echo "Getting blazegraph status"
-status=$(curl -s --head -w %{http_code} "$url_blazegraph" -o /dev/null)
-debug_msg "blazegraph curl status: $status"
-
-pull_containers
-
-echo " "
 echo "Removing stale containers from previous runs"
 $DOCKER_COMPOSE_CMD $compose_files down --remove-orphans 2>/dev/null
 # Force remove containers by name in case they were orphaned from a different project
 $DOCKER_COMPOSE_CMD $compose_files config 2>/dev/null | grep 'container_name:' | awk '{print $2}' | while read -r name; do
   docker rm -f "$name" 2>/dev/null
 done
+
+echo " "
+echo "Bringing up blazegraph first, so its status is not gated on the rest of the stack pulling images"
+$DOCKER_COMPOSE_CMD $compose_files pull --ignore-pull-failures blazegraph
+$DOCKER_COMPOSE_CMD $compose_files up -d blazegraph
+
+http_status_container 'blazegraph'
+
+pull_containers
 
 echo " "
 echo "Starting the docker containers"
@@ -261,8 +270,6 @@ if [ $container_status -ne 0 ]; then
   echo " "
   exit 1
 fi
-
-http_status_container 'blazegraph'
 
 # sleep just a little longer to make sure blazegraph is ready to receive data.
 sleep 3
@@ -331,14 +338,7 @@ elif [ $no_autostart -eq 1 ] && tty -s ; then
 else
   echo " "
   echo "GridAPPS-D is starting automatically."
-  echo " "
-  echo "Available endpoints:"
-  echo "  Web UI:        http://localhost:8080/"
-  echo "  Blazegraph:    http://localhost:8889/bigdata/"
-  echo "  STOMP:         tcp://localhost:61613"
-  echo "  WebSocket:     ws://localhost:61614"
-  echo "  OpenWire:      tcp://localhost:61616"
-  echo " "
+  print_access_urls
   echo "To connect to the container:"
   echo "  docker exec -it gridappsd /bin/bash"
   echo " "

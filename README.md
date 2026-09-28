@@ -69,6 +69,8 @@ Once running, GridAPPS-D is available at:
 | WebSocket | ws://localhost:61614 |
 | OpenWire | tcp://localhost:61616 |
 
+When the observability overlay is active, Grafana and supporting services are also reachable. See [Observability Stack](docs/observability.md) for endpoints, dashboards, and credentials.
+
 ## Connecting to the Container
 
 ```bash
@@ -113,7 +115,7 @@ The `docker-compose.d/` directory allows you to extend the base docker-compose c
 
 ### Adding Optional Services
 
-The directory contains `.dist` files as templates for optional services:
+The directory contains template files (`.dist`, `.nlr` suffixes) for optional services and overrides:
 
 | File | Description |
 |------|-------------|
@@ -124,6 +126,8 @@ The directory contains `.dist` files as templates for optional services:
 | `docker-compose_wsu-vvo.yml.dist` | WSU VVO application |
 | `docker-compose_wsu-restoration.yml.cplex` | WSU restoration (requires CPLEX) |
 | `docker-compose_timescaledb.yml.dst` | TimescaleDB for time-series data |
+| `docker-compose-grafana.yml.dist` | Observability stack: Grafana, Prometheus, Loki, Tempo, OTel collector |
+| `docker-compose_blazegraph-local.yml.nlr` | Local Blazegraph image override (host-local; activated copy is git-ignored) |
 
 To enable an optional service:
 ```bash
@@ -137,6 +141,12 @@ nano docker-compose.d/docker-compose_pyvvo.yml
 ./stop.sh
 ./run.sh
 ```
+
+### Observability Stack
+
+The `docker-compose-grafana.yml.dist` template adds a full observability stack: metrics via Prometheus, logs via Loki, and distributed traces via Tempo, all surfaced through Grafana dashboards. For activation steps (Path A / Path B), endpoint URLs, pre-provisioned dashboards, and credentials/security caveats, see [docs/observability.md](docs/observability.md).
+
+---
 
 ### Auto-Generated Files
 

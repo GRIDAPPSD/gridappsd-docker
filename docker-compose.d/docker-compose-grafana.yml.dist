@@ -1,11 +1,40 @@
 services:
-  # Downloads the OTel Java agent jar into a shared volume for gridappsd
+  # Downloads the OTel Java agent jar into a shared volume for gridappsd.
+  # GADO-008: verifies the jar SHA-256 against the published checksum for v2.25.0
+  # before signalling service_completed_successfully.  The checksum was computed
+  # from the release artifact at:
+  #   https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/tag/v2.25.0
+  # (the project does not publish a .sha256 file; the value below was computed
+  # from the release .jar and should be re-verified when the version is bumped).
   otel-agent-init:
     image: alpine:3.19
     container_name: otel-agent-init
     volumes:
       - otel_agent:/otel
-    entrypoint: ["sh", "-c", "[ -f /otel/opentelemetry-javaagent.jar ] || wget -O /otel/opentelemetry-javaagent.jar https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.25.0/opentelemetry-javaagent.jar"]
+    entrypoint:
+      - sh
+      - -c
+      # Note: $$ is compose-escaped to produce a literal $ inside the container
+      # shell.  All shell variables here use $$ so compose does not expand them.
+      - |
+        set -euo pipefail
+        JAR=/otel/opentelemetry-javaagent.jar
+        EXPECTED_SHA256="d6e809824176cf88792db359a9d928281ba2102fa8755453c1940f6c0289e396"
+        if [ ! -f "$$JAR" ]; then
+          echo "Downloading OTel Java agent v2.25.0..."
+          wget -q -O "$$JAR" \
+            https://github.com/open-telemetry/opentelemetry-java-instrumentation/releases/download/v2.25.0/opentelemetry-javaagent.jar
+        fi
+        echo "Verifying SHA-256..."
+        ACTUAL=$$(sha256sum "$$JAR" | awk '{print $$1}')
+        if [ "$$ACTUAL" != "$$EXPECTED_SHA256" ]; then
+          echo "ERROR: SHA-256 mismatch for $$JAR" >&2
+          echo "  expected: $$EXPECTED_SHA256" >&2
+          echo "  actual:   $$ACTUAL" >&2
+          rm -f "$$JAR"
+          exit 1
+        fi
+        echo "SHA-256 verified."
 
   gridappsd:
     environment:
@@ -23,13 +52,28 @@ services:
       otel-collector:
         condition: service_started
 
+  # GADO-006: all host-port publishes default to 127.0.0.1 (loopback-only).
+  # To allow off-host access set OBSERVABILITY_BIND_HOST=0.0.0.0 in the
+  # environment before starting the stack.  That is a deliberate opt-in; the
+  # secure default is loopback.
+  #
+  # Note on container-internal receiver binds (otel-collector-config.yaml,
+  # tempo.yaml): those configs bind OTLP receivers to 0.0.0.0 INSIDE their
+  # containers.  That is intentional and must stay: other containers (gridappsd
+  # JVM agent, otel-collector forwarding to tempo) reach these receivers over
+  # the Docker compose network using service-DNS names.  A container-internal
+  # bind of 0.0.0.0 means "listen on all interfaces inside the container",
+  # which is required so intra-stack traffic arriving on the compose network
+  # interface is accepted.  The HOST-side exposure is controlled entirely by
+  # the "HOST_IP:host_port:container_port" publish mapping below, which is
+  # now restricted to 127.0.0.1 by default.
   otel-collector:
     image: otel/opentelemetry-collector-contrib:0.96.0
     container_name: otel-collector
     restart: unless-stopped
     ports:
-      - "4317:4317"   # OTLP gRPC receiver
-      - "4318:4318"   # OTLP HTTP receiver
+      - "${OBSERVABILITY_BIND_HOST:-127.0.0.1}:4317:4317"   # OTLP gRPC receiver
+      - "${OBSERVABILITY_BIND_HOST:-127.0.0.1}:4318:4318"   # OTLP HTTP receiver
     volumes:
       - ./conf/otel-collector-config.yaml:/etc/otelcol-contrib/config.yaml:ro
     depends_on:
@@ -42,7 +86,7 @@ services:
     container_name: prometheus
     restart: unless-stopped
     ports:
-      - "9090:9090"
+      - "${OBSERVABILITY_BIND_HOST:-127.0.0.1}:9090:9090"
     volumes:
       - ./conf/prometheus.yml:/etc/prometheus/prometheus.yml:ro
       - prometheus_data:/prometheus
@@ -57,7 +101,7 @@ services:
     container_name: tempo
     restart: unless-stopped
     ports:
-      - "3200:3200"   # Tempo HTTP API
+      - "${OBSERVABILITY_BIND_HOST:-127.0.0.1}:3200:3200"   # Tempo HTTP API
     volumes:
       - ./conf/tempo.yaml:/etc/tempo/config.yaml:ro
       - tempo_data:/var/tempo
@@ -69,23 +113,36 @@ services:
     container_name: loki
     restart: unless-stopped
     ports:
-      - "3100:3100"
+      - "${OBSERVABILITY_BIND_HOST:-127.0.0.1}:3100:3100"
     volumes:
       - ./conf/loki.yaml:/etc/loki/config.yaml:ro
       - loki_data:/loki
     command:
       - -config.file=/etc/loki/config.yaml
 
+  # GADO-007 / GADO-009: Grafana auth hardening.
+  # - GF_SECURITY_ADMIN_PASSWORD is passed through from the operator environment
+  #   with NO shell fallback.  IMPORTANT: Grafana 10.x treats an empty or absent
+  #   GF_SECURITY_ADMIN_PASSWORD as unset and falls back to the admin default in
+  #   its built-in defaults.ini.  An empty value does NOT produce a fail-closed
+  #   state inside this image.  Fail-closed is enforced by the launchers
+  #   (run.sh / observability-up.sh), which auto-generate a strong password when
+  #   GRAFANA_ADMIN_PASSWORD is unset or empty (GADO-009) and print it in the
+  #   startup output.  Do not rely on this compose file alone as a credential gate.
+  # - Anonymous access is disabled (GF_AUTH_ANONYMOUS_ENABLED=false).
+  #   Set GRAFANA_ANONYMOUS_ENABLED=true explicitly if you need read-only
+  #   unauthenticated access in a trusted network (dev/demo only).
+  # - The admin username still supports an override via GRAFANA_ADMIN_USER.
   grafana:
     image: grafana/grafana:10.4.1
     container_name: grafana
     restart: unless-stopped
     ports:
-      - "4000:3000"
+      - "${OBSERVABILITY_BIND_HOST:-127.0.0.1}:4000:3000"
     environment:
       GF_SECURITY_ADMIN_USER: ${GRAFANA_ADMIN_USER:-admin}
-      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD:-admin}
-      GF_AUTH_ANONYMOUS_ENABLED: "true"
+      GF_SECURITY_ADMIN_PASSWORD: ${GRAFANA_ADMIN_PASSWORD}
+      GF_AUTH_ANONYMOUS_ENABLED: "${GRAFANA_ANONYMOUS_ENABLED:-false}"
       GF_AUTH_ANONYMOUS_ORG_ROLE: Viewer
     volumes:
       - ./conf/grafana-datasources.yaml:/etc/grafana/provisioning/datasources/datasources.yaml:ro
