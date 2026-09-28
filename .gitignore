@@ -9,6 +9,8 @@ services
 # run.sh; contains no secrets but is host-local state, not repo state).
 docker-compose.d/docker-compose-grafana.yml
 docker-compose.d/*.yml
+# GLIMPSE overlay is tracked so it ships enabled by default.
+!docker-compose.d/docker-compose_glimpse.yml
 *.tar.gz
 *.tgz
 *.zip
